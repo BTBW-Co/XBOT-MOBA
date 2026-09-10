@@ -1,19 +1,3 @@
-:root {
-  --moba-bg0: #070b14;
-  --moba-bg1: #101827;
-  --moba-fg: #f4f7fb;
-  --moba-muted: rgba(244, 247, 251, 0.68);
-  --moba-accent: #1ee0a2;
-  --moba-font: 'DM Sans', system-ui, sans-serif;
-  --moba-display: 'Instrument Serif', Georgia, serif;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 html,
 body,
 #root {
@@ -23,238 +7,78 @@ body,
 }
 
 body {
-  font-family: var(--moba-font);
-  color: var(--moba-fg);
-  background: var(--moba-bg0);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: #0b1220;
+  color: #f4f7fb;
   -webkit-font-smoothing: antialiased;
 }
 
-.moba-shell {
-  position: relative;
+.moba-viewport {
   min-height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+.moba-boot {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-
-.moba-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 55% at 15% 10%, color-mix(in srgb, var(--moba-accent) 28%, transparent), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 90% 80%, rgba(56, 120, 255, 0.22), transparent 55%),
-    linear-gradient(160deg, var(--moba-bg0), var(--moba-bg1) 55%, #0a1220);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.moba-header,
-.moba-main,
-.moba-footer {
-  position: relative;
-  z-index: 1;
-}
-
-.moba-header {
-  padding: 1.25rem 1.5rem 0.5rem;
-}
-
-.moba-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.moba-brand-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-}
-
-.moba-robot {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
-}
-
-.moba-robot--lg {
-  width: 88px;
-  height: 88px;
-  margin-bottom: 0.75rem;
-  animation: moba-float 3.2s ease-in-out infinite;
-}
-
-.moba-mark {
-  font-family: var(--moba-display);
-  font-size: clamp(1.75rem, 4vw, 2.4rem);
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.moba-product {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--moba-muted);
-}
-
-.moba-tagline {
-  margin: 0.2rem 0 0;
-  font-size: 0.85rem;
-  color: var(--moba-muted);
-}
-
-.moba-main {
-  flex: 1;
-  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  gap: 0.75rem;
+  background: #0b1220;
+  z-index: 10;
 }
 
-.moba-card {
-  width: min(440px, 100%);
-  padding: 1.75rem 1.5rem;
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  text-align: center;
-  animation: moba-in 420ms ease-out both;
-}
-
-.moba-shell--totem .moba-card--totem {
-  width: min(560px, 100%);
-  padding: 2.5rem 2rem;
-}
-
-.moba-cta {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.35rem, 3.5vw, 1.85rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--moba-accent) 90%, white);
-}
-
-.moba-card h1 {
-  margin: 0.2rem 0 0.65rem;
-  font-family: var(--moba-display);
-  font-size: clamp(1.85rem, 4vw, 2.5rem);
-  font-weight: 400;
-  line-height: 1.15;
-}
-
-.moba-card p,
-.moba-hint {
+.moba-boot p {
   margin: 0;
-  color: var(--moba-muted);
-  line-height: 1.5;
+  font-size: 0.9rem;
+  color: rgba(244, 247, 251, 0.65);
 }
 
-.moba-hint {
-  margin-top: 0.85rem;
-  font-size: 0.95rem;
+.moba-boot-dot {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: #1ee0a2;
+  animation: moba-pulse 1.2s ease-in-out infinite;
 }
 
-.moba-context {
+.moba-error {
+  min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.35rem !important;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
 }
 
-.moba-pill {
-  display: inline-flex;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--moba-fg);
+.moba-error h1 {
+  margin: 0;
+  font-size: 1.35rem;
 }
 
-.moba-pulse {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  margin: 1rem auto;
-  background: color-mix(in srgb, var(--moba-accent) 55%, transparent);
-  animation: moba-pulse 1.4s ease-in-out infinite;
+.moba-error p {
+  margin: 0;
+  color: rgba(244, 247, 251, 0.65);
 }
 
-.moba-card--error h1 {
-  color: #ffb4b4;
-}
-
-.moba-link {
-  display: inline-block;
-  margin-top: 1.25rem;
-  color: var(--moba-fg);
+.moba-error a {
+  color: #1ee0a2;
   font-weight: 600;
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--moba-accent) 70%, transparent);
-}
-
-.moba-link:hover {
-  color: var(--moba-accent);
-}
-
-.moba-footer {
-  padding: 1rem 1.5rem 1.25rem;
-  font-size: 0.75rem;
-  color: rgba(244, 247, 251, 0.45);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  justify-content: space-between;
-}
-
-/* Quando o XChat está vivo, a página vira “palco” — o chat é o foco */
-body.moba-xchat-live .moba-card--ready {
-  opacity: 0.92;
-}
-
-@keyframes moba-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @keyframes moba-pulse {
   0%,
   100% {
-    transform: scale(0.92);
-    opacity: 0.65;
+    transform: scale(0.9);
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.08);
     opacity: 1;
-  }
-}
-
-@keyframes moba-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@media (max-width: 640px) {
-  .moba-footer {
-    flex-direction: column;
   }
 }
