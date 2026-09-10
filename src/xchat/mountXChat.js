@@ -40,7 +40,7 @@ function waitFor(fn, { timeoutMs = 15000, intervalMs = 50 } = {}) {
 }
 
 /**
- * Monta o XChat oficial (sem reimplementar chat).
+ * Monta o XChat oficial com contexto do Object.
  * @param {object} bootstrap — payload de /v1/public/moba/bootstrap
  */
 export async function mountXChatFromBootstrap(bootstrap) {
@@ -65,6 +65,11 @@ export async function mountXChatFromBootstrap(bootstrap) {
     source: 'moba',
     pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
   }
+  if (bootstrap.moba_context && typeof bootstrap.moba_context === 'object') {
+    context.moba = bootstrap.moba_context
+  }
+
+  document.body.classList.add('moba-xchat-live')
 
   window.initXBot({
     channelId,
@@ -78,5 +83,10 @@ export async function mountXChatFromBootstrap(bootstrap) {
   }
 
   await waitFor(() => typeof window.openXBot === 'function')
+  // Experiência hosted: abre na hora (aproximar → conversar)
   window.openXBot()
+  // Segunda tentativa após aparência do widget
+  setTimeout(() => {
+    if (typeof window.openXBot === 'function') window.openXBot()
+  }, 600)
 }

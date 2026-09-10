@@ -2,19 +2,31 @@
 
 > Aproxime. Converse. Resolva.
 
-Camada pública do ecossistema XBot que conecta o mundo físico (NFC, QR, links) ao **XChat**.
+Camada pública do ecossistema XBot que conecta o mundo físico ao **XChat**.
 
 - Domínio: `https://moba.xbotone.com`
 - Object ID = UUID do canal **XChat** do tenant
 - Cada XChat criado é um MOBA
-- Agent/pipeline vincula-se depois nas automações (Conexões → pipeline)
+- Contexto do Object (produto, serviço, loja, totem…) vai para o Agent via XChat
+- Agent/pipeline vincula-se nas automações
 
 ## Rotas
 
 | Rota | Comportamento |
 |------|----------------|
-| `/` | MOBA padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID` na API) |
-| `/object-id/{uuid}` | Resolve o canal XChat e abre o XChat |
+| `/` | MOBA padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`) |
+| `/object-id/{uuid}` | Resolve o canal XChat, aplica contexto e abre o XChat |
+| `/object-id/{uuid}?mode=totem` | Experiência totem (“Tap to talk to XBot”) |
+
+## Experiência (vídeo)
+
+```
+OBJETO → APROXIMAR → XCHAT → AGENT → AÇÃO
+```
+
+- CTA: **APROXIME.** / **Tap to talk to XBot**
+- Ícone: robô XBot (workforce), não pata
+- Sem mencionar protocolos técnicos na UX pública
 
 ## Desenvolvimento
 
@@ -24,11 +36,6 @@ npm install
 npm run dev
 ```
 
-Variáveis:
-
-- `VITE_API_BASE_URL` — API XBot (ex.: `http://localhost:5001` ou `https://api.xbotone.com`)
-- `VITE_XCHAT_SCRIPT_URL` — opcional; default `https://xbotone.com/xchat/xbot.min.js`
-
 ## API
 
 ```
@@ -36,18 +43,14 @@ GET /v1/public/moba/bootstrap?object_id={uuid}
 GET /v1/public/moba/objects/{uuid}
 ```
 
-Resposta inclui `channel_id`, token legado do canal e URLs do widget. O app só monta o XChat — sem motor de chat próprio.
+Bootstrap inclui `moba_context`, `experience` e `context` para o widget.
 
-## Link público (painel)
+## Painel
 
-Nas configurações do canal XChat (app.xbotone.com):
-
-`https://moba.xbotone.com/object-id/{channel-uuid}`
+Configurações → Conexões → XChat → aba **MOBA**:
+- link público
+- tipo / formato / product_id / service_id / CTA
 
 ## Deploy
 
-Build estático (`npm run build` → `dist/`). Amplify/CloudFront com SPA fallback para `index.html`.
-
-## Princípio
-
-Não duplicar XChat, Agents, Tools ou sessão. MOBA resolve contexto e encaminha.
+`npm run build` → `dist/`. Amplify + rewrite SPA `/*` → `/index.html`.
