@@ -1,0 +1,27 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci || npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Strict-Transport-Security'
+          value: 'max-age=31536000; includeSubDomains'
+    - pattern: '/index.html'
+      headers:
+        - key: 'Cache-Control'
+          value: 'no-cache'
+# SPA: configure rewrite /* → /index.html (200) no Amplify Console
+# ou importe public/amplify-rewrites.json na aba Rewrites and redirects.

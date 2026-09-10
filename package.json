@@ -1,0 +1,21 @@
+{
+  "name": "xbot-moba",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "XBot-MOBA — ponte física/contextual (NFC, QR, Object ID) para o XChat",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
+  }
+}
