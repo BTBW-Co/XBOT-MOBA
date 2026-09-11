@@ -75,8 +75,10 @@ function injectFullscreenCss() {
       --xbot-header-bg: rgba(255, 255, 255, 0.95);
     }
 
-    /* Header limpo (~72px) */
+    /* Header full-bleed (largura total da tela) */
     body.moba-fullscreen .xbot-header {
+      width: 100% !important;
+      max-width: none !important;
       min-height: 64px !important;
       height: auto !important;
       padding: 12px 16px 10px !important;
@@ -137,6 +139,12 @@ function injectFullscreenCss() {
       padding: 24px 0 32px !important;
       gap: 18px !important;
       align-items: stretch !important;
+      justify-content: flex-start !important;
+    }
+    /* Estado inicial (empty / welcome): texto centralizado acima do composer */
+    body.moba-fullscreen .xbot-messages:not(:has(.xbot-message-row.user)) {
+      justify-content: center !important;
+      justify-content: safe center !important;
     }
     body.moba-fullscreen .xbot-messages > * {
       width: 100% !important;
@@ -162,12 +170,19 @@ function injectFullscreenCss() {
     }
     body.moba-fullscreen .xbot-empty {
       max-width: 40rem !important;
+      width: 100% !important;
       margin: 0 auto !important;
       padding: 0 16px !important;
+      text-align: center !important;
     }
     body.moba-fullscreen .xbot-empty-text {
       color: #737373 !important;
       font-size: 15px !important;
+      text-align: center !important;
+    }
+    /* Welcome (só bot, sem user): esconde timestamp; coluna já é a do composer */
+    body.moba-fullscreen .xbot-messages:not(:has(.xbot-message-row.user)) .xbot-message.bot .xbot-time {
+      display: none !important;
     }
 
     body.moba-fullscreen .xbot-message-row {
