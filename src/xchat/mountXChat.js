@@ -262,8 +262,8 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-compose {
       background: transparent !important;
       border-top: 0 !important;
-      padding: 8px 16px 8px !important;
-      padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+      padding: 8px 16px 4px !important;
+      padding-bottom: 4px !important;
       display: flex !important;
       justify-content: center !important;
     }
@@ -271,7 +271,7 @@ function injectFullscreenCss() {
       body.moba-fullscreen .xbot-compose {
         padding-left: 24px !important;
         padding-right: 24px !important;
-        padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+        padding-bottom: 4px !important;
       }
     }
     body.moba-fullscreen .xbot-compose-inner {
@@ -326,7 +326,25 @@ function injectFullscreenCss() {
     }
 
     body.moba-fullscreen .xbot-footer {
-      display: none !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 6px 16px max(14px, env(safe-area-inset-bottom)) !important;
+      background: #ffffff !important;
+      border-top: 0 !important;
+    }
+    body.moba-fullscreen .xbot-powered {
+      font-size: 12px !important;
+      color: #8e8e8e !important;
+      text-decoration: none !important;
+      letter-spacing: 0.01em;
+    }
+    body.moba-fullscreen .xbot-powered strong {
+      color: #52524c !important;
+      font-weight: 600 !important;
+    }
+    body.moba-fullscreen .xbot-powered:hover strong {
+      color: #1967d2 !important;
     }
 
     body.moba-fullscreen .xbot-inactivity-bar {
@@ -493,7 +511,9 @@ export async function mountXChatFromBootstrap(bootstrap) {
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
-  ;[200, 600, 1200, 2500, 5000].forEach((ms) => {
+  // Um único refresh do código após o histórico do widget estabilizar —
+  // evita corrida com GET /history do próprio chat.
+  ;[1500, 4000].forEach((ms) => {
     setTimeout(() => {
       if (typeof window.openXBot === 'function') window.openXBot()
       const box = document.querySelector('.xbot-chatbox')
