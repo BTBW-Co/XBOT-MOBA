@@ -132,16 +132,16 @@ function injectFullscreenCss() {
       user-select: all;
     }
 
-    /* Mensagens: coluna central ~40rem (padrão ChatGPT) */
+    /* Mensagens: coluna sempre centralizada (~40–48rem) */
     body.moba-fullscreen .xbot-messages {
       flex: 1 1 auto !important;
       background: #ffffff !important;
       padding: 24px 0 32px !important;
       gap: 18px !important;
-      align-items: stretch !important;
+      align-items: center !important;
       justify-content: flex-start !important;
     }
-    /* Estado inicial (empty / welcome): texto centralizado acima do composer */
+    /* Estado inicial (empty / welcome): também centraliza na vertical acima do composer */
     body.moba-fullscreen .xbot-messages:not(:has(.xbot-message-row.user)) {
       justify-content: center !important;
       justify-content: safe center !important;
@@ -154,6 +154,7 @@ function injectFullscreenCss() {
       padding-left: 16px !important;
       padding-right: 16px !important;
       box-sizing: border-box !important;
+      align-self: center !important;
     }
     @media (min-width: 640px) {
       body.moba-fullscreen .xbot-messages > * {
@@ -186,17 +187,35 @@ function injectFullscreenCss() {
     }
 
     body.moba-fullscreen .xbot-message-row {
-      max-width: 100% !important;
+      max-width: 40rem !important;
       gap: 8px !important;
       width: 100% !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+    @media (min-width: 1024px) {
+      body.moba-fullscreen .xbot-message-row {
+        max-width: 48rem !important;
+      }
     }
     body.moba-fullscreen .xbot-message-row.bot {
-      max-width: 100% !important;
-      align-self: stretch !important;
+      max-width: 40rem !important;
+      align-self: center !important;
+    }
+    @media (min-width: 1024px) {
+      body.moba-fullscreen .xbot-message-row.bot {
+        max-width: 48rem !important;
+      }
     }
     body.moba-fullscreen .xbot-message-row.user {
-      max-width: 100% !important;
+      max-width: 40rem !important;
+      align-self: center !important;
       justify-content: flex-end !important;
+    }
+    @media (min-width: 1024px) {
+      body.moba-fullscreen .xbot-message-row.user {
+        max-width: 48rem !important;
+      }
     }
     body.moba-fullscreen .xbot-msg-avatar {
       display: none !important;
