@@ -7,9 +7,9 @@ body,
 }
 
 body {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background: #0b1220;
-  color: #f4f7fb;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #262626;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -17,6 +17,7 @@ body {
   min-height: 100%;
   min-height: 100dvh;
   width: 100%;
+  background: #ffffff;
 }
 
 .moba-boot {
@@ -27,21 +28,21 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: #0b1220;
+  background: #ffffff;
   z-index: 10;
 }
 
 .moba-boot p {
   margin: 0;
   font-size: 0.9rem;
-  color: rgba(244, 247, 251, 0.65);
+  color: #737373;
 }
 
 .moba-boot-dot {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 999px;
-  background: #1ee0a2;
+  background: #1967d2;
   animation: moba-pulse 1.2s ease-in-out infinite;
 }
 
@@ -54,6 +55,8 @@ body {
   gap: 0.75rem;
   padding: 1.5rem;
   text-align: center;
+  background: #ffffff;
+  color: #262626;
 }
 
 .moba-error h1 {
@@ -63,11 +66,11 @@ body {
 
 .moba-error p {
   margin: 0;
-  color: rgba(244, 247, 251, 0.65);
+  color: #737373;
 }
 
 .moba-error a {
-  color: #1ee0a2;
+  color: #1967d2;
   font-weight: 600;
 }
 
