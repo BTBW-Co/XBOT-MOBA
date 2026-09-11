@@ -30,3 +30,7 @@ In the admin: **Settings → Connections → XChat** → copy **Public MOBA link
 ## Agent
 
 Link the Agent later in automations (channel pipeline). A tenant can have many MOBAs (many XChat channels), each with a different pipeline/agent.
+
+## Mobile
+
+On phones, opening the virtual keyboard lifts the conversation with the visual viewport, keeps the text field close to the keyboard, and hides «Powered by XBot». After send, focus stays on the same input.

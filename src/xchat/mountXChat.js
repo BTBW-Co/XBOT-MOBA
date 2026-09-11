@@ -44,8 +44,7 @@ function injectFullscreenCss() {
 
     body.moba-fullscreen .xbot-chatbox,
     body.moba-fullscreen .xbot-chatbox.is-open,
-    body.moba-fullscreen .xbot-chatbox.is-open:not(.xbot-keyboard-open),
-    body.moba-fullscreen .xbot-chatbox.xbot-keyboard-open {
+    body.moba-fullscreen .xbot-chatbox.is-open:not(.xbot-keyboard-open) {
       position: fixed !important;
       inset: 0 !important;
       width: 100% !important;
@@ -73,6 +72,38 @@ function injectFullscreenCss() {
       --xbot-subtle: #a3a39b;
       --xbot-border: #e8e8e3;
       --xbot-header-bg: rgba(255, 255, 255, 0.95);
+    }
+    /* Teclado aberto: top/height vêm do visualViewport (JS). Não forçar inset/100dvh. */
+    body.moba-fullscreen .xbot-chatbox.xbot-keyboard-open {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      display: flex !important;
+      flex-direction: column !important;
+      pointer-events: auto !important;
+      z-index: 2147483001 !important;
+      background: #ffffff !important;
+      --xbot-theme: #1967d2;
+      --xbot-theme-rgb: 25, 103, 210;
+      --xbot-surface: #ffffff;
+      --xbot-ink: #262626;
+      --xbot-text: #262626;
+      --xbot-muted: #737373;
+      --xbot-subtle: #a3a39b;
+      --xbot-border: #e8e8e3;
+      --xbot-header-bg: rgba(255, 255, 255, 0.95);
+    }
+    body.moba-fullscreen .xbot-chatbox.xbot-keyboard-open .xbot-compose {
+      padding-bottom: 6px !important;
     }
 
     /* Header full-bleed (largura total da tela) */
@@ -366,6 +397,14 @@ function injectFullscreenCss() {
       padding: 6px 16px max(14px, env(safe-area-inset-bottom)) !important;
       background: #ffffff !important;
       border-top: 0 !important;
+    }
+    /* Garante que o hide do teclado vença o display:flex acima */
+    body.moba-fullscreen .xbot-chatbox.xbot-keyboard-open .xbot-footer {
+      display: none !important;
+      padding: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
     }
     body.moba-fullscreen .xbot-powered {
       font-size: 12px !important;
