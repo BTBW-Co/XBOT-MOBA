@@ -25,7 +25,7 @@ No painel: **Configurações → Conexões → XChat** → copiar **Link públic
 
 ## Raiz
 
-`https://moba.xbotone.com` usa o canal padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`). A homepage `https://xbotone.com` embute essa URL como demo ao vivo do Agent.
+`https://moba.xbotone.com` usa o canal padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`). A homepage `https://xbotone.com` embute essa URL como demo ao vivo do Agent. O iframe pede `?fresh=1`: cada acesso ou refresh da homepage inicia uma sessão nova e, se o Agent tiver **Se apresentar** ligado, mostra a mensagem de apresentação de novo.
 
 ## Agent
 

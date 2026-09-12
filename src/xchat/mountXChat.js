@@ -563,6 +563,63 @@ function readVisitorId() {
   }
 }
 
+function isTruthyQueryFlag(value) {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'yes'
+}
+
+function isEmbeddedIframe() {
+  try {
+    return typeof window !== 'undefined' && window.self !== window.top
+  } catch {
+    return true
+  }
+}
+
+function isDefaultMobaPath(pathname) {
+  const path = String(pathname || '/')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+  return path === '' || path === '/'
+}
+
+/**
+ * Demo da homepage (`?fresh=1` ou iframe do MOBA padrão): sessão nova a cada load
+ * para a apresentação do Agent aparecer de novo. NFC/QR em tela cheia não entra aqui.
+ */
+export function shouldStartFreshSession({ search, pathname } = {}) {
+  const loc = typeof window !== 'undefined' ? window.location : { search: '', pathname: '/' }
+  const query = search != null ? search : loc.search || ''
+  const path = pathname != null ? pathname : loc.pathname || '/'
+  try {
+    const params = new URLSearchParams(String(query).startsWith('?') ? query.slice(1) : query)
+    if (isTruthyQueryFlag(params.get('fresh'))) return true
+  } catch {
+    /* ignore */
+  }
+  return isEmbeddedIframe() && isDefaultMobaPath(path)
+}
+
+export function startFreshVisitorId() {
+  try {
+    localStorage.removeItem('xbot_visitor_id')
+  } catch {
+    /* ignore */
+  }
+  try {
+    const stale = []
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i)
+      if (key && key.startsWith('xbot_welcome_delivered_')) stale.push(key)
+    }
+    stale.forEach((key) => sessionStorage.removeItem(key))
+  } catch {
+    /* ignore */
+  }
+}
+
 function renderSessionCodeBadge(code) {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header || !code) return
@@ -642,6 +699,11 @@ export async function mountXChatFromBootstrap(bootstrap) {
   await loadScript(scriptUrl)
   await waitFor(() => typeof window.initXBot === 'function')
 
+  const freshSession = shouldStartFreshSession()
+  if (freshSession) {
+    startFreshVisitorId()
+  }
+
   const context = {
     ...(bootstrap.context || {}),
     object_id: bootstrap.object_id,
@@ -654,7 +716,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
   }
 
   const widget = xchat.widget || {}
-  window.initXBot({
+  const initConfig = {
     channelId,
     token,
     apiBaseUrl,
@@ -665,7 +727,13 @@ export async function mountXChatFromBootstrap(bootstrap) {
     welcomeMessage: widget.welcome_message || undefined,
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
-  })
+  }
+  if (freshSession) {
+    initConfig.user = {
+      externalUserId: `moba_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+    }
+  }
+  window.initXBot(initConfig)
 
   if (typeof window.setXBotContext === 'function') {
     window.setXBotContext(context)
