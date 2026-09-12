@@ -34,3 +34,7 @@ Link the Agent later in automations (channel pipeline). A tenant can have many M
 ## Mobile
 
 On phones, opening the virtual keyboard lifts the conversation with the visual viewport, keeps the text field close to the keyboard, and hides «Powered by XBot». After send, focus stays on the same input.
+
+## Browser notifications
+
+When the bot replies, MOBA plays the same sound as the notification bell on `app.xbotone.com` and shows a native browser notification (if permission is granted on first interaction). The SSE stream stays active while the tab is in the background so alerts can arrive off-screen.

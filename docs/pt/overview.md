@@ -38,3 +38,7 @@ Sites de terceiros continuam usando o embed XChat (`embed.js`). O MOBA hosted é
 ## Mobile
 
 No celular, ao abrir o teclado virtual a conversa sobe com o viewport, o campo de texto fica próximo ao teclado e o «Powered by XBot» fica oculto. Depois de enviar, o foco permanece no mesmo input.
+
+## Notificações do browser
+
+Ao receber mensagem do bot, o MOBA toca o mesmo som do sino de `app.xbotone.com` e mostra notificação nativa do browser (se a permissão for concedida na primeira interação). O stream SSE permanece ativo com a aba em segundo plano para o alerta chegar fora da tela.

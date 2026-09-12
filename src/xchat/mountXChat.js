@@ -576,6 +576,8 @@ export async function mountXChatFromBootstrap(bootstrap) {
     botAvatar: widget.bot_avatar_url,
     themeColor: widget.theme_color || '#1967d2',
     welcomeMessage: widget.welcome_message || undefined,
+    // Notificação nativa do browser + som do app ao receber mensagem do bot.
+    browserNotify: true,
   })
 
   if (typeof window.setXBotContext === 'function') {
