@@ -35,7 +35,7 @@ A vinculação do Agent acontece depois, nas automações (pipeline do canal). U
 
 Sites de terceiros continuam usando o embed XChat (`embed.js`). O MOBA hosted é a experiência em `moba.xbotone.com`.
 
-Durante a conversa, recap, lista de escolhas e progresso da jornada podem aparecer como componentes (não na abertura vazia).
+Durante a conversa, recap, lista de escolhas e progresso da jornada podem aparecer como componentes (não na abertura vazia). Links da base de conhecimento aparecem como card na mesma coluna da resposta; o mesmo URL não é reenviado.
 
 ## Mobile
 

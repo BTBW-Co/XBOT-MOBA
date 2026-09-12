@@ -289,6 +289,75 @@ function injectFullscreenCss() {
       max-width: 100% !important;
       width: 100% !important;
     }
+    body.moba-fullscreen .xbot-message-row--link,
+    body.moba-fullscreen .xbot-message-row--link .xbot-message-col,
+    body.moba-fullscreen .xbot-message-row--link .xbot-message.bot,
+    body.moba-fullscreen .xbot-message-row--link .xbot-text {
+      width: 100% !important;
+      max-width: 100% !important;
+      align-items: stretch !important;
+    }
+    body.moba-fullscreen .xbot-link-card {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 14px 16px !important;
+      border: 1px solid #e5e5e5 !important;
+      border-radius: 14px !important;
+      background: #fafafa !important;
+      color: #0d0d0d !important;
+      text-decoration: none !important;
+      border-bottom: 1px solid #e5e5e5 !important;
+    }
+    body.moba-fullscreen .xbot-link-card:hover {
+      opacity: 1 !important;
+      border-color: #d4d4d4 !important;
+      background: #f5f5f5 !important;
+    }
+    body.moba-fullscreen .xbot-link-card-kicker {
+      font-size: 11px !important;
+      font-weight: 650 !important;
+      letter-spacing: 0.04em !important;
+      text-transform: uppercase !important;
+      color: #8e8e8e !important;
+    }
+    body.moba-fullscreen .xbot-link-card-title {
+      font-size: 16px !important;
+      font-weight: 650 !important;
+      line-height: 1.35 !important;
+      color: #0d0d0d !important;
+    }
+    body.moba-fullscreen .xbot-link-card-url {
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #1967d2 !important;
+    }
+    /* Fallback: mensagem que é só um <a> (widget antigo) ocupa a mesma coluna */
+    body.moba-fullscreen .xbot-message.bot .xbot-text:has(> p:only-child > a:only-child) {
+      width: 100% !important;
+    }
+    body.moba-fullscreen .xbot-message.bot .xbot-text:has(> p:only-child > a:only-child) > p {
+      margin: 0 !important;
+    }
+    body.moba-fullscreen .xbot-message.bot .xbot-text:has(> p:only-child > a:only-child) a {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 14px 16px !important;
+      border: 1px solid #e5e5e5 !important;
+      border-radius: 14px !important;
+      background: #fafafa !important;
+      color: #0d0d0d !important;
+      font-weight: 650 !important;
+      text-decoration: none !important;
+      border-bottom: 1px solid #e5e5e5 !important;
+      overflow-wrap: anywhere !important;
+    }
     body.moba-fullscreen .xbot-text,
     body.moba-fullscreen .xbot-text p,
     body.moba-fullscreen .xbot-text li,

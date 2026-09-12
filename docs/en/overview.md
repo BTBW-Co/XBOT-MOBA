@@ -33,6 +33,8 @@ In the admin: **Settings → Connections → XChat** → copy **Public MOBA link
 
 Link the Agent later in automations (channel pipeline). A tenant can have many MOBAs (many XChat channels), each with a different pipeline/agent.
 
+During the conversation, recap, choice lists, and journey progress can appear as components (not on an empty opening). Knowledge-base links render as a card in the same column as the reply; the same URL is not sent twice.
+
 ## Mobile
 
 On phones, opening the virtual keyboard lifts the conversation with the visual viewport, keeps the text field close to the keyboard, and hides «Powered by XBot». After send, focus stays on the same input.
