@@ -17,6 +17,8 @@ NFC / QR / link
 
 There is no separate chat engine — conversation is the official XChat widget.
 
+Mid-conversation recap, numbered choices, and journey progress can appear as components (not on an empty greeting).
+
 ## Public URL
 
 `https://moba.xbotone.com/object-id/{xchat-channel-uuid}`

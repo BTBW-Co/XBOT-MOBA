@@ -35,6 +35,8 @@ A vinculação do Agent acontece depois, nas automações (pipeline do canal). U
 
 Sites de terceiros continuam usando o embed XChat (`embed.js`). O MOBA hosted é a experiência em `moba.xbotone.com`.
 
+Durante a conversa, recap, lista de escolhas e progresso da jornada podem aparecer como componentes (não na abertura vazia).
+
 ## Mobile
 
 No celular, ao abrir o teclado virtual a conversa sobe com o viewport, o campo de texto fica próximo ao teclado e o «Powered by XBot» fica oculto. Depois de enviar, o foco permanece no mesmo input.

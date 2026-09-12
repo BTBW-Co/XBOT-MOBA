@@ -425,6 +425,24 @@ function injectFullscreenCss() {
       margin: 0 auto !important;
       border-radius: 12px !important;
     }
+    body.moba-fullscreen .xbot-ui-blocks {
+      max-width: 100%;
+    }
+    body.moba-fullscreen .xbot-recap,
+    body.moba-fullscreen .xbot-choice-list {
+      border-radius: 16px !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    body.moba-fullscreen .xbot-choice-item {
+      padding: 12px 10px !important;
+    }
+    body.moba-fullscreen .xbot-choice-label,
+    body.moba-fullscreen .xbot-recap-item dd {
+      font-size: 15px !important;
+    }
+    body.moba-fullscreen .xbot-step-progress {
+      font-size: 13px !important;
+    }
   `
   document.head.appendChild(style)
 }
