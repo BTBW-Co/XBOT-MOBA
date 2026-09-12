@@ -25,11 +25,13 @@ No painel: **Configurações → Conexões → XChat** → copiar **Link públic
 
 ## Raiz
 
-`https://moba.xbotone.com` usa o canal padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`).
+`https://moba.xbotone.com` usa o canal padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`). A homepage `https://xbotone.com` embute essa URL como demo ao vivo do Agent.
 
 ## Agent
 
 A vinculação do Agent acontece depois, nas automações (pipeline do canal). Um tenant pode ter vários MOBAs (vários XChat), cada um com pipeline/agent distinto.
+
+No MOBA padrão da plataforma, criar ou configurar um Agent no Workforce exige cadastro em `https://app.xbotone.com/signup` antes. O Agent da conversa não cria outros Agents nesta tela.
 
 ## Embed
 
@@ -44,3 +46,7 @@ No celular, ao abrir o teclado virtual a conversa sobe com o viewport, o campo d
 ## Notificações do browser
 
 Ao receber mensagem do bot, o MOBA toca o mesmo som do sino de `app.xbotone.com` e mostra notificação nativa do browser (se a permissão for concedida na primeira interação). O stream SSE permanece ativo com a aba em segundo plano para o alerta chegar fora da tela.
+
+## Tela de indisponibilidade
+
+Se o Object ID for inválido, o canal não existir ou o bootstrap falhar (rede, 404, 5xx), o visitante vê uma tela de marca: mascote XBot animado, mensagem amigável (sem jargão técnico como `Failed to fetch`) e um CTA **Conhecer o xbot** para o site institucional (`https://xbotone.com`).

@@ -27,6 +27,8 @@ OBJETO → APROXIMAR → XCHAT → AGENT → AÇÃO
 - CTA: **APROXIME.** / **Tap to talk to XBot**
 - Ícone: robô XBot (workforce), não pata
 - Sem mencionar protocolos técnicos na UX pública
+- Falha de bootstrap / rota inválida: tela de marca com mascote animado e CTA **Conhecer o xbot** → `https://xbotone.com`
+- A homepage `https://xbotone.com` embute o MOBA raiz como demo ao vivo (`frame-ancestors` de xbotone.com no Amplify)
 
 ## Desenvolvimento
 

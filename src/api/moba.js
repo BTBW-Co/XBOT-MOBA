@@ -10,17 +10,49 @@ export function getXchatScriptUrl() {
 }
 
 /**
- * @param {{ objectId?: string | null }} opts
+ * @param {{ objectId?: string | null, pin?: string | null }} opts
  */
-export async function bootstrapMoba({ objectId } = {}) {
+export async function bootstrapMoba({ objectId, pin } = {}) {
   const api = getApiBaseUrl()
+  const params = new URLSearchParams()
+  if (pin) params.set('pin', pin)
+  const qs = params.toString()
   const url = objectId
-    ? `${api}/v1/public/moba/objects/${encodeURIComponent(objectId)}`
-    : `${api}/v1/public/moba/bootstrap`
+    ? `${api}/v1/public/moba/objects/${encodeURIComponent(objectId)}${qs ? `?${qs}` : ''}`
+    : `${api}/v1/public/moba/bootstrap${qs ? `?${qs}` : ''}`
   const res = await fetch(url, {
     method: 'GET',
     headers: { Accept: 'application/json' },
     cache: 'no-store',
+  })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = await res.json()
+      detail = body?.detail || detail
+    } catch {
+      /* ignore */
+    }
+    const err = new Error(typeof detail === 'string' ? detail : `HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return res.json()
+}
+
+/**
+ * @param {{ objectId?: string | null, pin: string }} opts
+ */
+export async function unlockMoba({ objectId, pin } = {}) {
+  const api = getApiBaseUrl()
+  const res = await fetch(`${api}/v1/public/moba/unlock`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    cache: 'no-store',
+    body: JSON.stringify({
+      object_id: objectId || null,
+      pin,
+    }),
   })
   if (!res.ok) {
     let detail = `HTTP ${res.status}`

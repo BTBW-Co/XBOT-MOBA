@@ -27,11 +27,13 @@ In the admin: **Settings → Connections → XChat** → copy **Public MOBA link
 
 ## Root
 
-`https://moba.xbotone.com` uses the platform default channel (`MOBA_DEFAULT_CHANNEL_ID`).
+`https://moba.xbotone.com` uses the platform default channel (`MOBA_DEFAULT_CHANNEL_ID`). The marketing homepage at `https://xbotone.com` embeds this URL as a live Agent demo.
 
 ## Agent
 
 Link the Agent later in automations (channel pipeline). A tenant can have many MOBAs (many XChat channels), each with a different pipeline/agent.
+
+On the platform default MOBA, creating or configuring an Agent in Workforce requires sign up at `https://app.xbotone.com/signup` first. The conversation Agent does not create other Agents on that screen.
 
 During the conversation, recap, choice lists, and journey progress can appear as components (not on an empty opening). Knowledge-base links render as a card in the same column as the reply; the same URL is not sent twice.
 
@@ -42,3 +44,7 @@ On phones, opening the virtual keyboard lifts the conversation with the visual v
 ## Browser notifications
 
 When the bot replies, MOBA plays the same sound as the notification bell on `app.xbotone.com` and shows a native browser notification (if permission is granted on first interaction). The SSE stream stays active while the tab is in the background so alerts can arrive off-screen.
+
+## Unavailable screen
+
+If the Object ID is invalid, the channel does not exist, or bootstrap fails (network, 404, 5xx), visitors see a branded screen: animated XBot mascot, a friendly message (no raw errors such as `Failed to fetch`), and a **Conhecer o xbot** CTA to the institutional site (`https://xbotone.com`).
