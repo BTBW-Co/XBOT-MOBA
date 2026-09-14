@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { bootstrapMoba, unlockMoba } from '../api/moba'
 import { mountXChatFromBootstrap } from '../xchat/mountXChat'
+import MobaBootLoader from '../components/MobaBootLoader'
 import MobaErrorScreen from './MobaErrorScreen'
 import MobaPinScreen from './MobaPinScreen'
 
@@ -28,6 +29,15 @@ function writeStoredPin(objectId, pin) {
   }
 }
 
+function isBootPreview() {
+  if (!import.meta.env.DEV) return false
+  try {
+    return new URLSearchParams(window.location.search).get('preview') === 'boot'
+  } catch {
+    return false
+  }
+}
+
 export default function MobaHost({ notFound = false }) {
   const { objectId: rawObjectId } = useParams()
   const objectId = rawObjectId && UUID_RE.test(rawObjectId) ? rawObjectId : null
@@ -43,6 +53,7 @@ export default function MobaHost({ notFound = false }) {
 
   useEffect(() => {
     if (notFound) return undefined
+    if (isBootPreview()) return undefined
     if (rawObjectId && !objectId) {
       setState({
         phase: 'error',
@@ -148,12 +159,7 @@ export default function MobaHost({ notFound = false }) {
 
   return (
     <div className="moba-viewport" aria-busy={state.phase === 'loading'}>
-      {state.phase === 'loading' ? (
-        <div className="moba-boot" role="status">
-          <div className="moba-boot-dot" />
-          <p>Conectando…</p>
-        </div>
-      ) : null}
+      {state.phase === 'loading' ? <MobaBootLoader /> : null}
     </div>
   )
 }

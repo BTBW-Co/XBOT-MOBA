@@ -27,7 +27,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   background: #ffffff;
   z-index: 10;
 }
@@ -38,12 +38,74 @@ body {
   color: #737373;
 }
 
-.moba-boot-dot {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: #1967d2;
-  animation: moba-pulse 1.2s ease-in-out infinite;
+.moba-boot-stage {
+  position: relative;
+  width: 11.5rem;
+  height: 11.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.moba-boot-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.moba-boot-ring-a,
+.moba-boot-ring-b {
+  fill: none;
+  stroke-linecap: round;
+  transform-origin: 90px 90px;
+}
+
+.moba-boot-ring-a {
+  stroke: #f2705b;
+  stroke-width: 3;
+  stroke-dasharray: 12 14;
+  opacity: 0.7;
+  animation: moba-boot-ring-spin 2.6s linear infinite;
+}
+
+.moba-boot-ring-b {
+  stroke: #0073ea;
+  stroke-width: 2.25;
+  stroke-dasharray: 6 16;
+  opacity: 0.45;
+  animation: moba-boot-ring-spin 3.8s linear infinite reverse;
+}
+
+.moba-boot-figure {
+  width: 8.75rem;
+  height: 8.75rem;
+  animation: moba-boot-spin 2.6s ease-in-out infinite;
+}
+
+.moba-boot-sticker {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: moba-boot-pop 0.45s ease-out;
+}
+
+.moba-boot-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: moba-boot-blink 3.6s ease-in-out infinite;
+}
+
+.moba-boot-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: moba-boot-look 2.8s ease-in-out infinite;
+}
+
+.moba-boot-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: moba-boot-look 2.2s ease-in-out infinite;
 }
 
 .moba-pin {
@@ -302,15 +364,79 @@ body {
   letter-spacing: -0.04em;
 }
 
-@keyframes moba-pulse {
-  0%,
-  100% {
-    transform: scale(0.9);
-    opacity: 0.55;
+@keyframes moba-boot-spin {
+  0% {
+    transform: rotate(-10deg) translateY(0);
+  }
+  18% {
+    transform: rotate(12deg) translateY(-6px);
+  }
+  34% {
+    transform: rotate(-8deg) translateY(0);
   }
   50% {
-    transform: scale(1.08);
+    transform: rotate(180deg) translateY(-4px);
+  }
+  66% {
+    transform: rotate(360deg) translateY(0);
+  }
+  82% {
+    transform: rotate(8deg) translateY(-5px);
+  }
+  100% {
+    transform: rotate(-10deg) translateY(0);
+  }
+}
+
+@keyframes moba-boot-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes moba-boot-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  100% {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes moba-boot-look {
+  0%,
+  16%,
+  100% {
+    transform: translate(0, 0);
+  }
+  28% {
+    transform: translate(-4px, 1.5px);
+  }
+  46% {
+    transform: translate(4.5px, -1px);
+  }
+  64% {
+    transform: translate(2px, 2.5px);
+  }
+  82% {
+    transform: translate(-3.5px, -1.5px);
+  }
+}
+
+@keyframes moba-boot-blink {
+  0%,
+  36%,
+  44%,
+  100% {
+    transform: scaleY(1);
+  }
+  40% {
+    transform: scaleY(0.08);
   }
 }
 
@@ -414,7 +540,13 @@ body {
   .moba-error-eyes,
   .moba-error-eye,
   .moba-error-kicker-dot,
-  .moba-boot-dot {
+  .moba-boot-ring-a,
+  .moba-boot-ring-b,
+  .moba-boot-figure,
+  .moba-boot-sticker,
+  .moba-boot-eye,
+  .moba-boot-eyes,
+  .moba-boot-pupil {
     animation: none;
   }
 

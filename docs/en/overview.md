@@ -45,6 +45,10 @@ On phones, opening the virtual keyboard lifts the conversation with the visual v
 
 When the bot replies, MOBA plays the same sound as the notification bell on `app.xbotone.com` and shows a native browser notification (if permission is granted on first interaction). The SSE stream stays active while the tab is in the background so alerts can arrive off-screen.
 
+## Loading screen
+
+While bootstrap resolves the channel, MOBA shows the Workforce sticker mascots (bb8, obiwan, threepio, and r2d2): they spin, blink, look around, and take turns each revolution.
+
 ## Unavailable screen
 
 If the Object ID is invalid, the channel does not exist, or bootstrap fails (network, 404, 5xx), visitors see a branded screen: animated XBot mascot, a friendly message (no raw errors such as `Failed to fetch`), and a **Conhecer o xbot** CTA to the institutional site (`https://xbotone.com`).

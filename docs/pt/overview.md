@@ -47,6 +47,10 @@ No celular, ao abrir o teclado virtual a conversa sobe com o viewport, o campo d
 
 Ao receber mensagem do bot, o MOBA toca o mesmo som do sino de `app.xbotone.com` e mostra notificação nativa do browser (se a permissão for concedida na primeira interação). O stream SSE permanece ativo com a aba em segundo plano para o alerta chegar fora da tela.
 
+## Tela de carregamento
+
+Enquanto o bootstrap resolve o canal, o MOBA mostra os mascotes sticker do Workforce (bb8, obiwan, threepio e r2d2): giram, piscam, olham para os lados e se revezam a cada volta.
+
 ## Tela de indisponibilidade
 
 Se o Object ID for inválido, o canal não existir ou o bootstrap falhar (rede, 404, 5xx), o visitante vê uma tela de marca: mascote XBot animado, mensagem amigável (sem jargão técnico como `Failed to fetch`) e um CTA **Conhecer o xbot** para o site institucional (`https://xbotone.com`).

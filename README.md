@@ -29,6 +29,7 @@ OBJETO → APROXIMAR → XCHAT → AGENT → AÇÃO
 - Ícone: robô XBot (workforce), não pata
 - Sem mencionar protocolos técnicos na UX pública
 - Falha de bootstrap / rota inválida: tela de marca com mascote animado e CTA **Conhecer o xbot** → `https://xbotone.com`
+- Loading do bootstrap: mascotes sticker do Workforce (bb8, obiwan, threepio, r2d2) girando, piscando e olhando para os lados
 - A homepage `https://xbotone.com` embute o MOBA raiz como demo ao vivo (`frame-ancestors` de xbotone.com no Amplify). O iframe usa `?fresh=1` para sessão nova a cada acesso/refresh (apresentação do Agent, se estiver ligada).
 
 ## Desenvolvimento
