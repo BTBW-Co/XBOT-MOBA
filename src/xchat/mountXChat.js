@@ -386,7 +386,7 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-text,
     body.moba-fullscreen .xbot-text p,
     body.moba-fullscreen .xbot-text li,
-    body.moba-fullscreen .xbot-text span {
+    body.moba-fullscreen .xbot-text span:not(.xbot-presentation-unmute) {
       font-size: 16px !important;
       line-height: 1.625 !important;
     }
@@ -404,6 +404,30 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-presentation-video video {
       width: 100% !important;
       margin: 0 !important;
+    }
+    body.moba-fullscreen .xbot-presentation-unmute {
+      font-size: clamp(20px, 6.2vw, 30px) !important;
+      line-height: 1.15 !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.1em !important;
+      color: #fff !important;
+      animation: xbot-unmute-breathe 1.7s ease-in-out infinite !important;
+    }
+    @media (min-width: 768px) {
+      body.moba-fullscreen .xbot-presentation-unmute {
+        font-size: clamp(48px, 5.4vw, 72px) !important;
+        letter-spacing: 0.12em !important;
+      }
+    }
+    @keyframes xbot-unmute-breathe {
+      0%, 100% { opacity: 0.28; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.moba-fullscreen .xbot-presentation-unmute {
+        animation: none !important;
+        opacity: 1 !important;
+      }
     }
     body.moba-fullscreen .xbot-text code {
       background: #f5f5f5 !important;
