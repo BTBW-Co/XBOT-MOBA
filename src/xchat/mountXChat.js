@@ -602,6 +602,32 @@ export function shouldStartFreshSession({ search, pathname } = {}) {
   return isEmbeddedIframe() && isDefaultMobaPath(path)
 }
 
+const MOBA_PROMPT_MAX_LENGTH = 500
+
+export function readMobaPromptQuery({ search } = {}) {
+  const loc = typeof window !== 'undefined' ? window.location : { search: '' }
+  const query = search != null ? search : loc.search || ''
+  try {
+    const params = new URLSearchParams(String(query).startsWith('?') ? query.slice(1) : query)
+    return (params.get('q') || '').trim().slice(0, MOBA_PROMPT_MAX_LENGTH)
+  } catch {
+    return ''
+  }
+}
+
+function applyMobaPromptToComposer(prompt) {
+  const text = (prompt || '').trim()
+  if (!text) return false
+  const input = document.getElementById('xbot-input')
+  const send = document.getElementById('xbot-send')
+  if (!input || !send || input.dataset.mobaPromptSent === '1') return false
+  input.value = text
+  input.dispatchEvent(new Event('input', { bubbles: true }))
+  send.click()
+  input.dataset.mobaPromptSent = '1'
+  return true
+}
+
 export function startFreshVisitorId() {
   try {
     localStorage.removeItem('xbot_visitor_id')
@@ -741,6 +767,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
+  const heroPrompt = readMobaPromptQuery()
   // Um único refresh do código após o histórico do widget estabilizar —
   // evita corrida com GET /history do próprio chat.
   ;[1500, 4000].forEach((ms) => {
@@ -755,6 +782,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
         input.placeholder = 'Pergunte qualquer coisa'
         input.dataset.mobaPh = '1'
       }
+      if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
       void pollSessionCode({ apiBaseUrl, channelId, token })
     }, ms)
   })

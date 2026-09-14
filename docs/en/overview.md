@@ -27,7 +27,7 @@ In the admin: **Settings → Connections → XChat** → copy **Public MOBA link
 
 ## Root
 
-`https://moba.xbotone.com` uses the platform default channel (`MOBA_DEFAULT_CHANNEL_ID`). The marketing homepage at `https://xbotone.com` embeds this URL as a live Agent demo. The iframe sends `?fresh=1`: each visit or refresh starts a new session and, if the Agent has **Introduce yourself** on, shows the presentation message again.
+`https://moba.xbotone.com` uses the platform default channel (`MOBA_DEFAULT_CHANNEL_ID`). The marketing homepage at `https://xbotone.com` embeds this URL as a live Agent demo and also has a hero text field (no attach or voice). Submitting opens MOBA in a new tab with `?fresh=1`; if the visitor typed a prompt, query `q` is sent as the first message. The iframe sends `?fresh=1`: each visit or refresh starts a new session and, if the Agent has **Introduce yourself** on, shows the presentation message again.
 
 ## Agent
 

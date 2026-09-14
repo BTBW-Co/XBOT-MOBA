@@ -16,6 +16,7 @@ Camada pública do ecossistema XBot que conecta o mundo físico ao **XChat**.
 |------|----------------|
 | `/` | MOBA padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`) |
 | `/?fresh=1` | Demo da homepage: sessão nova a cada load (apresentação, se ligada) |
+| `/?fresh=1&q=` | Mesma sessão nova, com o texto do hero enviado como primeira mensagem |
 | `/object-id/{uuid}` | Resolve o canal XChat, aplica contexto e abre o XChat |
 | `/object-id/{uuid}?mode=totem` | Experiência totem (“Tap to talk to XBot”) |
 
@@ -30,7 +31,7 @@ OBJETO → APROXIMAR → XCHAT → AGENT → AÇÃO
 - Sem mencionar protocolos técnicos na UX pública
 - Falha de bootstrap / rota inválida: tela de marca com mascote animado e CTA **Conhecer o xbot** → `https://xbotone.com`
 - Loading do bootstrap: mascotes sticker do Workforce (bb8, obiwan, threepio, r2d2) girando, piscando e olhando para os lados
-- A homepage `https://xbotone.com` embute o MOBA raiz como demo ao vivo (`frame-ancestors` de xbotone.com no Amplify). O iframe usa `?fresh=1` para sessão nova a cada acesso/refresh (apresentação do Agent, se estiver ligada).
+- A homepage `https://xbotone.com` embute o MOBA raiz como demo ao vivo (`frame-ancestors` de xbotone.com no Amplify). O iframe usa `?fresh=1` para sessão nova a cada acesso/refresh (apresentação do Agent, se estiver ligada). O campo do hero (texto apenas) abre o MOBA em nova aba com `?fresh=1` e, se houver prompt, `?q=`.
 
 ## Desenvolvimento
 
