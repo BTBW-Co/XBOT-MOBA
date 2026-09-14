@@ -250,9 +250,34 @@ function injectFullscreenCss() {
     }
     body.moba-fullscreen .xbot-msg-avatar {
       display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      overflow: hidden !important;
     }
+    body.moba-fullscreen .xbot-message-row.bot {
+      gap: 0 !important;
+    }
+    body.moba-fullscreen .xbot-message-row.bot,
     body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
-      padding-left: 0 !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+    @media (min-width: 640px) {
+      body.moba-fullscreen .xbot-message-row.bot,
+      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+      }
+    }
+    @media (min-width: 1024px) {
+      body.moba-fullscreen .xbot-message-row.bot,
+      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
+      }
     }
     body.moba-fullscreen .xbot-message-row.bot .xbot-message-col {
       width: 100% !important;
@@ -370,6 +395,15 @@ function injectFullscreenCss() {
     }
     body.moba-fullscreen .xbot-text p:last-child {
       margin-bottom: 0 !important;
+    }
+    body.moba-fullscreen .xbot-presentation-video {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 4px 0 8px !important;
+    }
+    body.moba-fullscreen .xbot-presentation-video video {
+      width: 100% !important;
+      margin: 0 !important;
     }
     body.moba-fullscreen .xbot-text code {
       background: #f5f5f5 !important;
@@ -621,6 +655,17 @@ function applyMobaPromptToComposer(prompt) {
   const input = document.getElementById('xbot-input')
   const send = document.getElementById('xbot-send')
   if (!input || !send || input.dataset.mobaPromptSent === '1') return false
+  const compose = document.querySelector('.xbot-compose')
+  if (compose && compose.classList.contains('is-presentation-locked')) {
+    if (input.dataset.mobaPromptWait === '1') return false
+    input.dataset.mobaPromptWait = '1'
+    const onUnlock = () => {
+      document.removeEventListener('xbot:compose-unlocked', onUnlock)
+      applyMobaPromptToComposer(text)
+    }
+    document.addEventListener('xbot:compose-unlocked', onUnlock)
+    return false
+  }
   input.value = text
   input.dispatchEvent(new Event('input', { bubbles: true }))
   send.click()
