@@ -21,7 +21,9 @@ Não existe chat paralelo: a conversa é o XChat oficial.
 
 `https://moba.xbotone.com/object-id/{uuid-do-canal-xchat}`
 
-No painel: **Configurações → Conexões → XChat** → copiar **Link público MOBA**.
+No painel: **Configurações → Conexões → XChat** → copiar **Link público MOBA** (NFC/QR).
+
+Para WhatsApp / redes, copie o **Link para WhatsApp / redes** (`…/shareable` na API): o preview mostra nome e logo; o clique abre o mesmo MOBA.
 
 ## Raiz
 

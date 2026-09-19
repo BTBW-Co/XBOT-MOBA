@@ -23,7 +23,9 @@ Mid-conversation recap, numbered choices, and journey progress can appear as com
 
 `https://moba.xbotone.com/object-id/{xchat-channel-uuid}`
 
-In the admin: **Settings → Connections → XChat** → copy **Public MOBA link**.
+In the admin: **Settings → Connections → XChat** → copy **Public MOBA link** (NFC/QR).
+
+For WhatsApp / social, copy **Link for WhatsApp / social** (`…/shareable` on the API): the preview shows name and logo; tapping opens the same MOBA.
 
 ## Root
 
