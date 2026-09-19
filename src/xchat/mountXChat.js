@@ -130,7 +130,8 @@ function injectFullscreenCss() {
         padding-right: 24px !important;
       }
     }
-    body.moba-fullscreen .xbot-header img {
+    body.moba-fullscreen .xbot-header > img,
+    body.moba-fullscreen .xbot-header .xbot-header-avatar img {
       width: 42px !important;
       height: 42px !important;
       border-radius: 999px !important;
@@ -148,19 +149,22 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-header-minimize {
       display: none !important;
     }
-    body.moba-fullscreen .xbot-moba-session-code {
+    body.moba-fullscreen .xbot-moba-brand-logo {
       flex-shrink: 0;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      color: #52524c;
-      background: #f3f3ef;
-      border: 1px solid #e8e8e3;
-      border-radius: 999px;
-      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       margin-left: auto;
-      user-select: all;
+      line-height: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+    body.moba-fullscreen .xbot-moba-brand-logo img {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 8px !important;
+      object-fit: contain !important;
+      display: block;
     }
 
     /* Mensagens: coluna sempre centralizada (~40–48rem) */
@@ -613,14 +617,6 @@ function waitFor(fn, { timeoutMs = 15000, intervalMs = 50 } = {}) {
   })
 }
 
-function readVisitorId() {
-  try {
-    return (localStorage.getItem('xbot_visitor_id') || '').trim()
-  } catch {
-    return ''
-  }
-}
-
 function isTruthyQueryFlag(value) {
   const raw = String(value || '')
     .trim()
@@ -715,61 +711,37 @@ export function startFreshVisitorId() {
   }
 }
 
-function renderSessionCodeBadge(code) {
+/** Logo Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
+function renderBrandLogo() {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
-  if (!header || !code) return
-  let badge = header.querySelector('.xbot-moba-session-code')
-  if (!badge) {
-    badge = document.createElement('button')
-    badge.type = 'button'
-    badge.className = 'xbot-moba-session-code'
-    badge.title = 'Código da sessão — copie para localizar no Chat'
-    badge.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(code)
-        badge.dataset.copied = '1'
-        badge.textContent = 'Copiado'
-        setTimeout(() => {
-          badge.dataset.copied = ''
-          badge.textContent = code
-        }, 1200)
-      } catch {
-        /* ignore */
-      }
-    })
-    const minimize = header.querySelector('.xbot-header-minimize')
-    if (minimize) header.insertBefore(badge, minimize)
-    else header.appendChild(badge)
-  }
-  if (badge.dataset.copied !== '1') badge.textContent = code
+  if (!header) return false
+  if (header.querySelector('.xbot-moba-brand-logo')) return true
+
+  const mark = document.createElement('span')
+  mark.className = 'xbot-moba-brand-logo'
+  mark.setAttribute('aria-hidden', 'true')
+
+  const img = document.createElement('img')
+  img.src = '/logo.svg'
+  img.alt = ''
+  img.width = 32
+  img.height = 32
+  img.decoding = 'async'
+  mark.appendChild(img)
+
+  const minimize = header.querySelector('.xbot-header-minimize')
+  if (minimize) header.insertBefore(mark, minimize)
+  else header.appendChild(mark)
+  return true
 }
 
-async function pollSessionCode({ apiBaseUrl, channelId, token }) {
-  const base = (apiBaseUrl || '').replace(/\/$/, '')
-  if (!base || !channelId || !token) return null
-  const visitorId = readVisitorId()
-  if (!visitorId) return null
-  const url =
-    `${base}/v1/xchat/history?channel_id=${encodeURIComponent(channelId)}` +
-    `&visitor_id=${encodeURIComponent(visitorId)}&limit=1`
-  try {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const code = (data?.session_code || '').trim()
-    if (code) {
-      renderSessionCodeBadge(code)
-      return code
-    }
-  } catch {
-    /* ignore */
-  }
-  return null
+function ensureBrandLogo({ attempts = 12, intervalMs = 250 } = {}) {
+  if (renderBrandLogo()) return
+  let left = attempts
+  const timer = setInterval(() => {
+    left -= 1
+    if (renderBrandLogo() || left <= 0) clearInterval(timer)
+  }, intervalMs)
 }
 
 /**
@@ -836,10 +808,9 @@ export async function mountXChatFromBootstrap(bootstrap) {
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
+  ensureBrandLogo()
   const heroPrompt = readMobaPromptQuery()
-  // Um único refresh do código após o histórico do widget estabilizar —
-  // evita corrida com GET /history do próprio chat.
-  ;[1500, 4000].forEach((ms) => {
+  ;[400, 1500, 4000].forEach((ms) => {
     setTimeout(() => {
       if (typeof window.openXBot === 'function') window.openXBot()
       const box = document.querySelector('.xbot-chatbox')
@@ -852,16 +823,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
         input.dataset.mobaPh = '1'
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
-      void pollSessionCode({ apiBaseUrl, channelId, token })
+      ensureBrandLogo()
     }, ms)
   })
-
-  // Após a primeira mensagem o código passa a existir com certeza.
-  document.addEventListener(
-    'click',
-    () => {
-      setTimeout(() => void pollSessionCode({ apiBaseUrl, channelId, token }), 800)
-    },
-    { passive: true },
-  )
 }
