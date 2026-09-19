@@ -28,7 +28,7 @@ OBJETO → APROXIMAR → XCHAT → AGENT → AÇÃO
 
 - CTA: **APROXIME.** / **Tap to talk to XBot**
 - Ícone: robô XBot (workforce), não pata
-- Header do chat: logo Xbot institucional (mesmo do site) no canto superior direito
+- Header do chat: wordmark **xbot** (mesma tipografia do site) no canto superior direito
 - Sem mencionar protocolos técnicos na UX pública
 - Falha de bootstrap / rota inválida: tela de marca com mascote animado e CTA **Conhecer o xbot** → `https://xbotone.com`
 - Loading do bootstrap: mascotes sticker do Workforce (bb8, obiwan, threepio, r2d2) girando, piscando e olhando para os lados

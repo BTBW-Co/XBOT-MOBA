@@ -153,18 +153,16 @@ function injectFullscreenCss() {
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       margin-left: auto;
-      line-height: 0;
+      font-family: 'Geom', sans-serif;
+      font-weight: 600;
+      font-size: 21px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      color: #1a1a18;
       pointer-events: none;
       user-select: none;
-    }
-    body.moba-fullscreen .xbot-moba-brand-logo img {
-      width: 32px !important;
-      height: 32px !important;
-      border-radius: 8px !important;
-      object-fit: contain !important;
-      display: block;
     }
 
     /* Mensagens: coluna sempre centralizada (~40–48rem) */
@@ -711,7 +709,7 @@ export function startFreshVisitorId() {
   }
 }
 
-/** Logo Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
+/** Wordmark Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
 function renderBrandLogo() {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header) return false
@@ -720,14 +718,7 @@ function renderBrandLogo() {
   const mark = document.createElement('span')
   mark.className = 'xbot-moba-brand-logo'
   mark.setAttribute('aria-hidden', 'true')
-
-  const img = document.createElement('img')
-  img.src = '/logo.svg'
-  img.alt = ''
-  img.width = 32
-  img.height = 32
-  img.decoding = 'async'
-  mark.appendChild(img)
+  mark.textContent = 'xbot'
 
   const minimize = header.querySelector('.xbot-header-minimize')
   if (minimize) header.insertBefore(mark, minimize)
