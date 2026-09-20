@@ -27,6 +27,8 @@ In the admin: **Settings → Connections → XChat** → copy **Public MOBA link
 
 For WhatsApp / social, copy **Link for WhatsApp / social** (`…/shareable` on the API): the preview shows name and logo; tapping opens the same MOBA.
 
+When the visitor opens chat, the session stores approximate location (city/country from IP), device, and page — no permission prompt. Operators see this in Chat by clicking the conversation name. The WhatsApp preview does not store that data.
+
 ## Root
 
 `https://moba.xbotone.com` uses the platform default channel (`MOBA_DEFAULT_CHANNEL_ID`). The marketing homepage at `https://xbotone.com` presents the **Tap. Talk. Resolve.** section (physical NFC/QR experience) and the CTA opens this URL full screen. It also has a hero text field (no attach or voice). Submitting opens MOBA in the same tab with `?fresh=1`; if the visitor typed a prompt, query `q` is sent as the first message. Hero and CTA send `?fresh=1`: each opening from the homepage starts a new session and, if the Agent has **Introduce yourself** on, shows the presentation message again. Full-screen MOBA (NFC/QR or a direct link) sends the opening once per session: reloading the same conversation does not repeat it.

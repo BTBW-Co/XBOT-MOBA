@@ -25,6 +25,8 @@ No painel: **Configurações → Conexões → XChat** → copiar **Link públic
 
 Para WhatsApp / redes, copie o **Link para WhatsApp / redes** (`…/shareable` na API): o preview mostra nome e logo; o clique abre o mesmo MOBA.
 
+Quando o visitante abre o chat, a sessão guarda localização aproximada (cidade/país pelo IP), dispositivo e página — sem pedir permissão. O operador vê isso no Chat ao clicar no nome da conversa. O preview do WhatsApp não grava esses dados.
+
 ## Raiz
 
 `https://moba.xbotone.com` usa o canal padrão da plataforma (`MOBA_DEFAULT_CHANNEL_ID`). A homepage `https://xbotone.com` apresenta a seção **Aproxime. Converse. Resolva.** (experiência física NFC/QR) e o CTA abre essa URL em tela cheia. Também tem um campo de texto no hero (sem anexo nem voz). Enviar abre o MOBA na mesma aba com `?fresh=1`; se o visitante digitou algo, a query `q` é enviada como primeira mensagem. Hero e CTA pedem `?fresh=1`: cada abertura pela homepage inicia uma sessão nova e, se o Agent tiver **Se apresentar** ligado, mostra a mensagem de apresentação de novo. No MOBA em tela cheia (NFC/QR ou link direto), a abertura é uma vez por sessão: recarregar a mesma conversa não a repete.
