@@ -1,8 +1,12 @@
 [
   {
-    "source": "/<*>",
+    "source": "/share/<*>",
     "status": "200",
-    "target": "/index.html",
-    "condition": null
+    "target": "https://api.xbotone.com/v1/public/moba/share/<*>"
+  },
+  {
+    "source": "/<*>",
+    "status": "404-200",
+    "target": "/index.html"
   }
 ]

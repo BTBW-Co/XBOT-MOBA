@@ -25,7 +25,7 @@ Mid-conversation recap, numbered choices, and journey progress can appear as com
 
 In the admin: **Settings → Connections → XChat** → copy **Public MOBA link** (NFC/QR).
 
-For WhatsApp / social, copy **Link for WhatsApp / social** (`…/shareable` on the API): the preview shows name and logo; tapping opens the same MOBA.
+For WhatsApp / social, copy **Link for WhatsApp / social** (`https://moba.xbotone.com/share/{uuid}`): the preview shows name and logo; tapping opens the same MOBA.
 
 When the visitor opens chat, the session stores approximate location (city/country from IP), device, and page — no permission prompt. Operators see this in Chat by clicking the conversation name. The WhatsApp preview does not store that data.
 

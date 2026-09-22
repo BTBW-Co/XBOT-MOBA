@@ -25,5 +25,8 @@ frontend:
       headers:
         - key: 'Cache-Control'
           value: 'no-cache'
-# SPA: configure rewrite /* → /index.html (200) no Amplify Console
-# ou importe public/amplify-rewrites.json na aba Rewrites and redirects.
+# Rewrites: public/amplify-rewrites.json
+#   /share/<*> → API …/v1/public/moba/share/<*> (200 proxy, WhatsApp/OG)
+#   /<*> → /index.html (404-200 SPA)
+# Aplique via `aws amplify update-app --custom-rules` ou Amplify Console
+# (Hosting → Rewrites and redirects). A regra /share deve vir antes do catch-all.
