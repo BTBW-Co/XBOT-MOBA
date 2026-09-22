@@ -781,7 +781,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
     context,
     botName: widget.bot_name || bootstrap.display_name || 'Xbot',
     botAvatar: widget.bot_avatar_url,
-    themeColor: widget.theme_color || '#1967d2',
+    themeColor: widget.theme_color || '#0073ea',
     welcomeMessage: widget.welcome_message || undefined,
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
