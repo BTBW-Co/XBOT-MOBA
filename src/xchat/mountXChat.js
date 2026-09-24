@@ -100,28 +100,38 @@ function injectFullscreenCss() {
       padding-bottom: 6px !important;
     }
 
-    /* Header full-bleed (largura total da tela) */
+    /* Header flutuante (inset + cantos arredondados) */
     body.moba-fullscreen .xbot-header {
-      width: 100% !important;
+      width: auto !important;
       max-width: none !important;
-      min-height: 64px !important;
+      align-self: stretch !important;
+      min-height: 56px !important;
       height: auto !important;
-      padding: 12px 16px 10px !important;
-      padding-left: max(16px, env(safe-area-inset-left)) !important;
-      padding-right: max(16px, env(safe-area-inset-right)) !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      border-bottom: 1px solid #ecece8 !important;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      margin: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0
+        max(10px, env(safe-area-inset-left)) !important;
+      padding: 10px 14px !important;
+      background: rgba(255, 255, 255, 0.92) !important;
+      border: 0 !important;
+      border-bottom: 0 !important;
+      border-radius: 18px !important;
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
       gap: 12px !important;
-      box-shadow: none !important;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.04),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.06) !important;
       flex-shrink: 0 !important;
       z-index: 20 !important;
     }
     @media (min-width: 768px) {
       body.moba-fullscreen .xbot-header {
-        padding-left: 24px !important;
-        padding-right: 24px !important;
+        margin-left: 16px !important;
+        margin-right: 16px !important;
+        margin-top: max(12px, env(safe-area-inset-top)) !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        border-radius: 20px !important;
       }
     }
     body.moba-fullscreen .xbot-header > img,
@@ -196,6 +206,9 @@ function injectFullscreenCss() {
     }
     body.moba-fullscreen.moba-has-bg .xbot-chatbox {
       background: #ffffff !important;
+    }
+    body.moba-fullscreen.moba-has-bg .xbot-footer {
+      background: transparent !important;
     }
     /* Estado inicial (empty / welcome): também centraliza na vertical acima do composer */
     body.moba-fullscreen .xbot-messages:not(:has(.xbot-message-row.user)) {
@@ -481,6 +494,7 @@ function injectFullscreenCss() {
       border-top: 0 !important;
       padding: 8px 16px 4px !important;
       padding-bottom: 4px !important;
+      margin-bottom: 5px !important;
       display: flex !important;
       justify-content: center !important;
     }
