@@ -51,7 +51,7 @@ When the bot replies, MOBA plays the same sound as the notification bell on `app
 
 ## Loading screen
 
-While bootstrap resolves the channel, MOBA shows the Workforce sticker mascots (bb8, obiwan, threepio, and r2d2): they spin, blink, look around, and take turns each revolution.
+While bootstrap resolves the channel, MOBA shows the same loader as the operator Chat: Workforce avatars (bb8, obiwan, threepio, and r2d2) stacked in overlapping circles, entering in sequence with a light float.
 
 ## Unavailable screen
 

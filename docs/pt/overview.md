@@ -53,7 +53,7 @@ Ao receber mensagem do bot, o MOBA toca o mesmo som do sino de `app.xbotone.com`
 
 ## Tela de carregamento
 
-Enquanto o bootstrap resolve o canal, o MOBA mostra os mascotes sticker do Workforce (bb8, obiwan, threepio e r2d2): giram, piscam, olham para os lados e se revezam a cada volta.
+Enquanto o bootstrap resolve o canal, o MOBA mostra o mesmo loader do Chat do operador: avatares Workforce (bb8, obiwan, threepio e r2d2) empilhados em círculo, entrando em sequência e flutuando levemente.
 
 ## Tela de indisponibilidade
 

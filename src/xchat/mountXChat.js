@@ -28,12 +28,6 @@ function injectFullscreenCss() {
     body.moba-fullscreen .moba-boot {
       background: #fff;
     }
-    body.moba-fullscreen .moba-boot p {
-      color: #737373;
-    }
-    body.moba-fullscreen .moba-boot-dot {
-      background: #1967d2;
-    }
 
     body.moba-fullscreen .xbot-launcher,
     body.moba-fullscreen .xbot-welcome-teaser,
