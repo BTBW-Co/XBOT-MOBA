@@ -9,21 +9,41 @@ import MobaPinScreen from './MobaPinScreen'
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-function pinStorageKey(objectId) {
-  return `moba.pin.${objectId || 'default'}`
+/** Paths reservados do host (não são public_code). */
+const RESERVED_PATHS = new Set([
+  'object-id',
+  'share',
+  'assets',
+  'static',
+  'favicon.ico',
+  'robots.txt',
+  'index.html',
+  'manifest.json',
+  'manifest.webmanifest',
+  'sw.js',
+  'service-worker.js',
+  'vite.svg',
+  'health',
+  'api',
+])
+
+const PUBLIC_CODE_RE = /^[0-9A-Za-z]{4,12}$/
+
+function pinStorageKey(ref) {
+  return `moba.pin.${ref || 'default'}`
 }
 
-function readStoredPin(objectId) {
+function readStoredPin(ref) {
   try {
-    return (sessionStorage.getItem(pinStorageKey(objectId)) || '').trim()
+    return (sessionStorage.getItem(pinStorageKey(ref)) || '').trim()
   } catch {
     return ''
   }
 }
 
-function writeStoredPin(objectId, pin) {
+function writeStoredPin(ref, pin) {
   try {
-    sessionStorage.setItem(pinStorageKey(objectId), pin)
+    sessionStorage.setItem(pinStorageKey(ref), pin)
   } catch {
     /* ignore */
   }
@@ -38,9 +58,35 @@ function isBootPreview() {
   }
 }
 
+/**
+ * Resolve o identificador público do MOBA a partir da rota.
+ * Aceita UUID (legado /object-id/…) ou public_code curto (/K7X9QM2).
+ */
+function resolveMobaRef({ objectId: rawObjectId, publicCode: rawPublicCode }) {
+  const fromObject = (rawObjectId || '').trim()
+  if (fromObject && UUID_RE.test(fromObject)) {
+    return { ref: fromObject, kind: 'uuid' }
+  }
+  const fromCode = (rawPublicCode || '').trim()
+  if (!fromCode) return { ref: null, kind: null }
+  if (RESERVED_PATHS.has(fromCode.toLowerCase())) {
+    return { ref: null, kind: 'invalid' }
+  }
+  if (UUID_RE.test(fromCode)) {
+    return { ref: fromCode, kind: 'uuid' }
+  }
+  if (PUBLIC_CODE_RE.test(fromCode)) {
+    return { ref: fromCode, kind: 'code' }
+  }
+  return { ref: null, kind: 'invalid' }
+}
+
 export default function MobaHost({ notFound = false }) {
-  const { objectId: rawObjectId } = useParams()
-  const objectId = rawObjectId && UUID_RE.test(rawObjectId) ? rawObjectId : null
+  const { objectId: rawObjectId, publicCode: rawPublicCode } = useParams()
+  const { ref: mobaRef, kind } = resolveMobaRef({
+    objectId: rawObjectId,
+    publicCode: rawPublicCode,
+  })
   const unlockingRef = useRef(false)
 
   const [state, setState] = useState({
@@ -54,10 +100,10 @@ export default function MobaHost({ notFound = false }) {
   useEffect(() => {
     if (notFound) return undefined
     if (isBootPreview()) return undefined
-    if (rawObjectId && !objectId) {
+    if ((rawObjectId || rawPublicCode) && !mobaRef) {
       setState({
         phase: 'error',
-        error: 'Object ID inválido',
+        error: kind === 'invalid' ? 'Link inválido' : 'Object ID inválido',
         preview: null,
         pinError: null,
         unlocking: false,
@@ -70,16 +116,16 @@ export default function MobaHost({ notFound = false }) {
     ;(async () => {
       try {
         setState((prev) => ({ ...prev, phase: 'loading', error: null, pinError: null }))
-        const storedPin = readStoredPin(objectId)
+        const storedPin = readStoredPin(mobaRef)
         let data
         if (storedPin) {
           try {
-            data = await unlockMoba({ objectId, pin: storedPin })
+            data = await unlockMoba({ objectId: mobaRef, pin: storedPin })
           } catch {
-            data = await bootstrapMoba({ objectId })
+            data = await bootstrapMoba({ objectId: mobaRef })
           }
         } else {
-          data = await bootstrapMoba({ objectId })
+          data = await bootstrapMoba({ objectId: mobaRef })
         }
         if (cancelled) return
         if (data?.pin_required) {
@@ -110,14 +156,14 @@ export default function MobaHost({ notFound = false }) {
       cancelled = true
       document.body.classList.remove('moba-xchat-live', 'moba-fullscreen')
     }
-  }, [objectId, rawObjectId, notFound])
+  }, [mobaRef, rawObjectId, rawPublicCode, kind, notFound])
 
   async function handleUnlock(pin) {
     if (unlockingRef.current) return
     unlockingRef.current = true
     setState((prev) => ({ ...prev, unlocking: true, pinError: null }))
     try {
-      const data = await unlockMoba({ objectId, pin })
+      const data = await unlockMoba({ objectId: mobaRef, pin })
       if (data?.pin_required) {
         unlockingRef.current = false
         setState((prev) => ({
@@ -127,7 +173,7 @@ export default function MobaHost({ notFound = false }) {
         }))
         return
       }
-      writeStoredPin(objectId, pin)
+      writeStoredPin(mobaRef, pin)
       setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
       await mountXChatFromBootstrap(data)
     } catch (err) {

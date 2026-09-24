@@ -6,6 +6,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MobaHost />} />
       <Route path="/object-id/:objectId" element={<MobaHost />} />
+      {/* Código curto canônico: https://moba.xbotone.com/K7X9QM2 */}
+      <Route path="/:publicCode" element={<MobaHost />} />
       <Route path="*" element={<MobaHost notFound />} />
     </Routes>
   )

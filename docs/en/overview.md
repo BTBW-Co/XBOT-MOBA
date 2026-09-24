@@ -8,7 +8,8 @@ MOBA is XBot’s physical/contextual bridge. Every **XChat** channel created in 
 
 ```
 NFC / QR / link
-    → moba.xbotone.com/object-id/{uuid}
+    → moba.xbotone.com/{public_code}          (canonical)
+    → moba.xbotone.com/object-id/{uuid}       (legacy, always valid)
     → resolve Object ID (= XChat channel)
     → mount XChat
     → Agent (via pipeline/automations)
@@ -21,11 +22,13 @@ Mid-conversation recap, numbered choices, and journey progress can appear as com
 
 ## Public URL
 
-`https://moba.xbotone.com/object-id/{xchat-channel-uuid}`
+Canonical (short): `https://moba.xbotone.com/{public_code}` (e.g. `https://moba.xbotone.com/K7X9QM2`)
+
+Legacy: `https://moba.xbotone.com/object-id/{xchat-channel-uuid}` — existing NFC/QR tags keep working.
 
 In the admin: **Settings → Connections → XChat** → copy **Public MOBA link** (NFC/QR).
 
-For WhatsApp / social, copy **Link for WhatsApp / social** (`https://moba.xbotone.com/share/{uuid}`): the preview shows name and logo; tapping opens the same MOBA.
+For WhatsApp / social, copy **Link for WhatsApp / social** (`https://moba.xbotone.com/share/{public_code}`): the preview shows name and logo; tapping opens the same MOBA.
 
 When the visitor opens chat, the session stores approximate location (city/country from IP), device, and page — no permission prompt. Operators see this in Chat by clicking the conversation name. The WhatsApp preview does not store that data.
 

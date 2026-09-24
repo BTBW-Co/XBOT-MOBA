@@ -18,8 +18,8 @@
 
 Arquivo canônico: `public/amplify-rewrites.json`. A regra **`/share/<*>` deve vir antes** do catch-all SPA.
 
-- **Share** (WhatsApp / redes): `https://moba.xbotone.com/share/{uuid}` — reverse proxy para o HTML `og:*` da API.
-- **Entry** (NFC / QR): `https://moba.xbotone.com/object-id/{uuid}` — SPA.
+- **Share** (WhatsApp / social): `https://moba.xbotone.com/share/{public_code|uuid}` — reverse proxy to API HTML `og:*`.
+- **Entry** (NFC / QR): `https://moba.xbotone.com/{public_code}` (canonical) or `/object-id/{uuid}` (legacy) — SPA.
 
 Aplicar no app (substitui todas as custom rules):
 

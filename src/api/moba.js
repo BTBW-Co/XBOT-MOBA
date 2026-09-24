@@ -15,11 +15,11 @@ export function getXchatScriptUrl() {
 export async function bootstrapMoba({ objectId, pin } = {}) {
   const api = getApiBaseUrl()
   const params = new URLSearchParams()
+  if (objectId) params.set('object_id', objectId)
   if (pin) params.set('pin', pin)
   const qs = params.toString()
-  const url = objectId
-    ? `${api}/v1/public/moba/objects/${encodeURIComponent(objectId)}${qs ? `?${qs}` : ''}`
-    : `${api}/v1/public/moba/bootstrap${qs ? `?${qs}` : ''}`
+  // Sempre via /bootstrap: aceita UUID legado e public_code curto.
+  const url = `${api}/v1/public/moba/bootstrap${qs ? `?${qs}` : ''}`
   const res = await fetch(url, {
     method: 'GET',
     headers: { Accept: 'application/json' },

@@ -17,7 +17,8 @@ Camada pública do ecossistema XBot que conecta o mundo físico ao **XChat**.
 | `/` | MOBA padrão: continua a sessão do visitante (abertura uma vez) |
 | `/?fresh=1` | Demo da homepage: sessão nova a cada load (apresentação, se ligada) |
 | `/?fresh=1&q=` | Mesma sessão nova, com o texto do hero enviado como primeira mensagem |
-| `/object-id/{uuid}` | Resolve o canal XChat, aplica contexto e abre o XChat |
+| `/{public_code}` | Código curto canônico (ex. `/K7X9QM2`) — resolve o canal XChat |
+| `/object-id/{uuid}` | Legado — resolve o canal XChat, aplica contexto e abre o XChat |
 | `/object-id/{uuid}?mode=totem` | Experiência totem (“Tap to talk to XBot”) |
 
 ## Experiência (vídeo)
