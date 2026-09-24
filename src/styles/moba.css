@@ -349,8 +349,10 @@ body.moba-has-bg .moba-boot {
 }
 
 .moba-brand {
-  font-weight: 700;
+  font-family: 'Geom', sans-serif;
+  font-weight: 600;
   letter-spacing: -0.04em;
+  text-transform: lowercase;
 }
 
 @keyframes moba-boot-enter {

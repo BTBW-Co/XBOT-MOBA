@@ -604,9 +604,14 @@ function injectFullscreenCss() {
       text-decoration: none !important;
       letter-spacing: 0.01em;
     }
+    /* Wordmark xbot (Geom) — mesma tipografia do logo do site / header */
     body.moba-fullscreen .xbot-powered strong {
-      color: #52524c !important;
+      font-family: 'Geom', sans-serif !important;
       font-weight: 600 !important;
+      font-size: 13px !important;
+      letter-spacing: -0.04em !important;
+      text-transform: lowercase !important;
+      color: #1a1a18 !important;
     }
     body.moba-fullscreen .xbot-powered:hover strong {
       color: #1967d2 !important;
@@ -849,6 +854,10 @@ export async function mountXChatFromBootstrap(bootstrap) {
     botName: widget.bot_name || bootstrap.display_name || 'Xbot',
     botAvatar: widget.bot_avatar_url,
     themeColor: widget.theme_color || '#0073ea',
+    choiceStyle:
+      widget.choice_style === 'glass_light' || widget.choice_style === 'glass_dark'
+        ? widget.choice_style
+        : 'classic',
     welcomeMessage: widget.welcome_message || undefined,
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
