@@ -312,35 +312,50 @@ function injectFullscreenCss() {
         max-width: 48rem !important;
       }
     }
+    /* Avatares no fio: só via DOM do widget (se Aparência setou URL). */
     body.moba-fullscreen .xbot-msg-avatar {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
+      display: block !important;
+      width: 28px !important;
+      height: 28px !important;
       margin: 0 !important;
       padding: 0 !important;
       border: 0 !important;
-      overflow: hidden !important;
+      border-radius: 999px !important;
+      object-fit: cover !important;
+      flex-shrink: 0 !important;
+      overflow: visible !important;
     }
     body.moba-fullscreen .xbot-message-row.bot {
-      gap: 0 !important;
-    }
-    body.moba-fullscreen .xbot-message-row.bot,
-    body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+      gap: 10px !important;
       padding-left: 16px !important;
       padding-right: 16px !important;
     }
+    body.moba-fullscreen .xbot-message-row.user {
+      gap: 10px !important;
+    }
+    /* Mensagens seguidas sem repetir avatar: alinha com o texto (28 + gap). */
+    body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+      padding-left: 54px !important;
+    }
+    body.moba-fullscreen .xbot-message-row.user.xbot-message-row--no-avatar {
+      padding-right: 54px !important;
+    }
     @media (min-width: 640px) {
-      body.moba-fullscreen .xbot-message-row.bot,
-      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+      body.moba-fullscreen .xbot-message-row.bot {
         padding-left: 24px !important;
         padding-right: 24px !important;
       }
+      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+        padding-left: 62px !important;
+      }
     }
     @media (min-width: 1024px) {
-      body.moba-fullscreen .xbot-message-row.bot,
-      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+      body.moba-fullscreen .xbot-message-row.bot {
         padding-left: 4rem !important;
         padding-right: 4rem !important;
+      }
+      body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
+        padding-left: calc(4rem + 38px) !important;
       }
     }
     body.moba-fullscreen .xbot-message-row.bot .xbot-message-col {
@@ -852,7 +867,8 @@ export async function mountXChatFromBootstrap(bootstrap) {
     apiBaseUrl,
     context,
     botName: widget.bot_name || bootstrap.display_name || 'Xbot',
-    botAvatar: widget.bot_avatar_url,
+    botAvatar: widget.bot_avatar_url || '',
+    userAvatar: widget.user_avatar_url || '',
     themeColor: widget.theme_color || '#0073ea',
     choiceStyle:
       widget.choice_style === 'glass_light' || widget.choice_style === 'glass_dark'
