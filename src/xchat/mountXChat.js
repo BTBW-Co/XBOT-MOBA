@@ -177,6 +177,25 @@ function injectFullscreenCss() {
       gap: 18px !important;
       align-items: center !important;
       justify-content: flex-start !important;
+      /* Scroll invisível (gesto/roda do mouse seguem funcionando) */
+      scrollbar-width: none !important; /* Firefox */
+      -ms-overflow-style: none !important; /* Legacy Edge */
+    }
+    body.moba-fullscreen .xbot-messages::-webkit-scrollbar {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
+    }
+    body.moba-fullscreen .xbot-chatbox,
+    body.moba-fullscreen .xbot-chatbox * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    body.moba-fullscreen .xbot-chatbox::-webkit-scrollbar,
+    body.moba-fullscreen .xbot-chatbox *::-webkit-scrollbar {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
     }
     /* Fundo de marca nas laterais (imagem + opacidade do canal) */
     body.moba-fullscreen.moba-has-bg .xbot-chatbox {
