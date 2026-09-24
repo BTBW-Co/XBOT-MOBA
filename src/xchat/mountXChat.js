@@ -168,6 +168,35 @@ function injectFullscreenCss() {
       align-items: center !important;
       justify-content: flex-start !important;
     }
+    /* Fundo de marca nas laterais (imagem + opacidade do canal) */
+    body.moba-fullscreen.moba-has-bg .xbot-chatbox {
+      isolation: isolate;
+    }
+    body.moba-fullscreen.moba-has-bg .xbot-chatbox::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: var(--moba-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: var(--moba-bg-opacity, 0.12);
+      pointer-events: none;
+    }
+    body.moba-fullscreen.moba-has-bg .xbot-header,
+    body.moba-fullscreen.moba-has-bg .xbot-messages,
+    body.moba-fullscreen.moba-has-bg .xbot-compose,
+    body.moba-fullscreen.moba-has-bg .xbot-footer {
+      position: relative;
+      z-index: 1;
+    }
+    body.moba-fullscreen.moba-has-bg .xbot-messages {
+      background: transparent !important;
+    }
+    body.moba-fullscreen.moba-has-bg .xbot-chatbox {
+      background: #ffffff !important;
+    }
     /* Estado inicial (empty / welcome): também centraliza na vertical acima do composer */
     body.moba-fullscreen .xbot-messages:not(:has(.xbot-message-row.user)) {
       justify-content: center !important;
@@ -729,6 +758,39 @@ function ensureBrandLogo({ attempts = 12, intervalMs = 250 } = {}) {
   }, intervalMs)
 }
 
+function cssUrlValue(url) {
+  const raw = String(url || '').trim()
+  if (!raw) return ''
+  // Escapa caracteres que quebram url("...") no CSS.
+  const safe = raw.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '')
+  return `url("${safe}")`
+}
+
+function normalizeBackgroundOpacity(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 0.12
+  const opacity = n > 1 ? n / 100 : n
+  if (opacity < 0.05 || opacity > 0.4) return 0.12
+  return Math.round(opacity * 1000) / 1000
+}
+
+/** Aplica imagem de fundo das laterais a partir do appearance do bootstrap. */
+function applyMobaBackground(widget) {
+  const url = String(widget?.background_url || '').trim()
+  const root = document.documentElement
+  const body = document.body
+  if (!url) {
+    body?.classList.remove('moba-has-bg')
+    root.style.removeProperty('--moba-bg-image')
+    root.style.removeProperty('--moba-bg-opacity')
+    return
+  }
+  const opacity = normalizeBackgroundOpacity(widget?.background_opacity)
+  root.style.setProperty('--moba-bg-image', cssUrlValue(url))
+  root.style.setProperty('--moba-bg-opacity', String(opacity))
+  body?.classList.add('moba-has-bg')
+}
+
 /**
  * Monta o XChat em modo fullscreen (única UI do MOBA).
  */
@@ -768,6 +830,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
   }
 
   const widget = xchat.widget || {}
+  applyMobaBackground(widget)
   const initConfig = {
     channelId,
     token,
