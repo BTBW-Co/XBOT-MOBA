@@ -145,8 +145,9 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-header .xbot-header-avatar img {
       width: 42px !important;
       height: 42px !important;
-      border-radius: 999px !important;
+      border-radius: 9999px !important;
       object-fit: cover !important;
+      object-position: center !important;
     }
     body.moba-fullscreen .xbot-header-name {
       font-size: 16px !important;
@@ -283,10 +284,11 @@ function injectFullscreenCss() {
 
     body.moba-fullscreen .xbot-message-row {
       max-width: 40rem !important;
-      gap: 8px !important;
+      gap: 10px !important;
       width: 100% !important;
       margin-left: auto !important;
       margin-right: auto !important;
+      align-items: flex-start !important;
     }
     @media (min-width: 1024px) {
       body.moba-fullscreen .xbot-message-row {
@@ -312,18 +314,31 @@ function injectFullscreenCss() {
         max-width: 48rem !important;
       }
     }
-    /* Avatares no fio: só via DOM do widget (se Aparência setou URL). */
+    /* Avatares no fio: circular + alinhados ao topo da 1ª mensagem. */
+    body.moba-fullscreen .xbot-msg-avatar-wrap {
+      display: inline-flex !important;
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      min-height: 32px !important;
+      margin: 2px 0 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 9999px !important;
+      overflow: hidden !important;
+      flex-shrink: 0 !important;
+      background: #e8e8e3 !important;
+    }
     body.moba-fullscreen .xbot-msg-avatar {
       display: block !important;
-      width: 28px !important;
-      height: 28px !important;
+      width: 100% !important;
+      height: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
       border: 0 !important;
-      border-radius: 999px !important;
+      border-radius: 9999px !important;
       object-fit: cover !important;
-      flex-shrink: 0 !important;
-      overflow: visible !important;
+      object-position: center !important;
     }
     body.moba-fullscreen .xbot-message-row.bot {
       gap: 10px !important;
@@ -333,12 +348,12 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-message-row.user {
       gap: 10px !important;
     }
-    /* Mensagens seguidas sem repetir avatar: alinha com o texto (28 + gap). */
+    /* Mensagens seguidas sem repetir avatar: alinha com o texto (32 + gap). */
     body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
-      padding-left: 54px !important;
+      padding-left: 58px !important;
     }
     body.moba-fullscreen .xbot-message-row.user.xbot-message-row--no-avatar {
-      padding-right: 54px !important;
+      padding-right: 58px !important;
     }
     @media (min-width: 640px) {
       body.moba-fullscreen .xbot-message-row.bot {
@@ -346,7 +361,7 @@ function injectFullscreenCss() {
         padding-right: 24px !important;
       }
       body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
-        padding-left: 62px !important;
+        padding-left: 66px !important;
       }
     }
     @media (min-width: 1024px) {
@@ -355,7 +370,7 @@ function injectFullscreenCss() {
         padding-right: 4rem !important;
       }
       body.moba-fullscreen .xbot-message-row.bot.xbot-message-row--no-avatar {
-        padding-left: calc(4rem + 38px) !important;
+        padding-left: calc(4rem + 42px) !important;
       }
     }
     body.moba-fullscreen .xbot-message-row.bot .xbot-message-col {
