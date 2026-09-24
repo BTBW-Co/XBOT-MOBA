@@ -1,4 +1,8 @@
 import { getXchatScriptUrl } from '../api/moba'
+import {
+  applyMobaBackground,
+  writeCachedMobaAppearance,
+} from '../lib/mobaBackground'
 
 const FULLSCREEN_STYLE_ID = 'xbot-moba-fullscreen-css'
 
@@ -27,6 +31,9 @@ function injectFullscreenCss() {
     }
     body.moba-fullscreen .moba-boot {
       background: #fff;
+    }
+    body.moba-fullscreen.moba-has-bg .moba-boot {
+      background: transparent;
     }
 
     body.moba-fullscreen .xbot-launcher,
@@ -791,39 +798,6 @@ function ensureBrandLogo({ attempts = 12, intervalMs = 250 } = {}) {
   }, intervalMs)
 }
 
-function cssUrlValue(url) {
-  const raw = String(url || '').trim()
-  if (!raw) return ''
-  // Escapa caracteres que quebram url("...") no CSS.
-  const safe = raw.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '')
-  return `url("${safe}")`
-}
-
-function normalizeBackgroundOpacity(value) {
-  const n = Number(value)
-  if (!Number.isFinite(n)) return 0.12
-  const opacity = n > 1 ? n / 100 : n
-  if (opacity < 0.05 || opacity > 0.4) return 0.12
-  return Math.round(opacity * 1000) / 1000
-}
-
-/** Aplica imagem de fundo das laterais a partir do appearance do bootstrap. */
-function applyMobaBackground(widget) {
-  const url = String(widget?.background_url || '').trim()
-  const root = document.documentElement
-  const body = document.body
-  if (!url) {
-    body?.classList.remove('moba-has-bg')
-    root.style.removeProperty('--moba-bg-image')
-    root.style.removeProperty('--moba-bg-opacity')
-    return
-  }
-  const opacity = normalizeBackgroundOpacity(widget?.background_opacity)
-  root.style.setProperty('--moba-bg-image', cssUrlValue(url))
-  root.style.setProperty('--moba-bg-opacity', String(opacity))
-  body?.classList.add('moba-has-bg')
-}
-
 /**
  * Monta o XChat em modo fullscreen (única UI do MOBA).
  */
@@ -838,6 +812,11 @@ export async function mountXChatFromBootstrap(bootstrap) {
   if (!channelId || !token) {
     throw new Error('Bootstrap incompleto (channel/token)')
   }
+
+  const widget = xchat.widget || {}
+  // Fundo + preload antes do script: o visitante vê a marca enquanto o XChat baixa.
+  applyMobaBackground(widget)
+  writeCachedMobaAppearance(bootstrap.public_code || bootstrap.object_id, widget)
 
   injectFullscreenCss()
   document.documentElement.classList.add('moba-fullscreen')
@@ -862,8 +841,6 @@ export async function mountXChatFromBootstrap(bootstrap) {
     context.moba = bootstrap.moba_context
   }
 
-  const widget = xchat.widget || {}
-  applyMobaBackground(widget)
   const initConfig = {
     channelId,
     token,

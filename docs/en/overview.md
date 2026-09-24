@@ -54,7 +54,7 @@ When the bot replies, MOBA plays the same sound as the notification bell on `app
 
 ## Loading screen
 
-While bootstrap resolves the channel, MOBA shows the same loader as the operator Chat: Workforce avatars (bb8, obiwan, threepio, and r2d2) stacked in overlapping circles, entering in sequence with a light float.
+While bootstrap resolves the channel, MOBA shows the same loader as the operator Chat: Workforce avatars (bb8, obiwan, threepio, and r2d2) stacked in overlapping circles, entering in sequence with a light float. If the channel has a brand background, that image is applied to the shell (and preloaded) as soon as bootstrap or a same-tab appearance cache is available — in parallel with downloading the XChat script — so the brand appears before the chat mounts.
 
 ## Unavailable screen
 

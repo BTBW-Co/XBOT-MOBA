@@ -1,10 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { bootstrapMoba, unlockMoba } from '../api/moba'
+import {
+  applyMobaBackground,
+  readCachedMobaAppearance,
+  writeCachedMobaAppearance,
+} from '../lib/mobaBackground'
 import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import MobaBootLoader from '../components/MobaBootLoader'
 import MobaErrorScreen from './MobaErrorScreen'
 import MobaPinScreen from './MobaPinScreen'
+
+/** Pinta fundo + cache a partir do widget do bootstrap (se houver). */
+function paintBackgroundFromBootstrap(data, ref) {
+  const widget = data?.xchat?.widget
+  if (!widget) return
+  applyMobaBackground(widget)
+  writeCachedMobaAppearance(data?.public_code || ref || data?.object_id, widget)
+}
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -111,6 +124,10 @@ export default function MobaHost({ notFound = false }) {
       return undefined
     }
 
+    // 2ª visita na mesma aba: pinta o fundo cacheado antes do bootstrap.
+    const cached = readCachedMobaAppearance(mobaRef)
+    if (cached) applyMobaBackground(cached)
+
     let cancelled = false
 
     ;(async () => {
@@ -138,8 +155,11 @@ export default function MobaHost({ notFound = false }) {
           })
           return
         }
-        setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
+        // Assim que o JSON chega: fundo + preload; o loader permanece até o XChat montar.
+        paintBackgroundFromBootstrap(data, mobaRef)
         await mountXChatFromBootstrap(data)
+        if (cancelled) return
+        setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
       } catch (err) {
         if (cancelled) return
         setState({
@@ -154,7 +174,9 @@ export default function MobaHost({ notFound = false }) {
 
     return () => {
       cancelled = true
-      document.body.classList.remove('moba-xchat-live', 'moba-fullscreen')
+      document.body.classList.remove('moba-xchat-live', 'moba-fullscreen', 'moba-has-bg')
+      document.documentElement.style.removeProperty('--moba-bg-image')
+      document.documentElement.style.removeProperty('--moba-bg-opacity')
     }
   }, [mobaRef, rawObjectId, rawPublicCode, kind, notFound])
 
@@ -174,8 +196,11 @@ export default function MobaHost({ notFound = false }) {
         return
       }
       writeStoredPin(mobaRef, pin)
-      setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
+      paintBackgroundFromBootstrap(data, mobaRef)
+      setState({ phase: 'loading', error: null, preview: null, pinError: null, unlocking: false })
       await mountXChatFromBootstrap(data)
+      unlockingRef.current = false
+      setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
     } catch (err) {
       const invalid = err?.status === 403
       unlockingRef.current = false

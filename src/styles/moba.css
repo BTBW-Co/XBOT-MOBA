@@ -20,6 +20,32 @@ body {
   background: #ffffff;
 }
 
+/*
+ * Fundo de marca no shell (antes do XChat montar).
+ * A imagem começa a baixar assim que o bootstrap (ou cache) seta as CSS vars.
+ * Com o chat ao vivo, o ::before do .xbot-chatbox assume o paint.
+ */
+body.moba-has-bg {
+  background: #ffffff;
+}
+
+body.moba-has-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--moba-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--moba-bg-opacity, 0.12);
+  pointer-events: none;
+}
+
+body.moba-has-bg.moba-xchat-live::before {
+  display: none;
+}
+
 .moba-boot {
   position: fixed;
   inset: 0;
@@ -28,6 +54,10 @@ body {
   justify-content: center;
   background: #ffffff;
   z-index: 10;
+}
+
+body.moba-has-bg .moba-boot {
+  background: transparent;
 }
 
 .moba-boot-stack {
