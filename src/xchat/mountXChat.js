@@ -149,11 +149,43 @@ function injectFullscreenCss() {
       object-fit: cover !important;
       object-position: center !important;
     }
+    body.moba-fullscreen .xbot-header-text {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      gap: 3px !important;
+      min-width: 0 !important;
+    }
     body.moba-fullscreen .xbot-header-name {
-      font-size: 16px !important;
+      font-family: "Geom", "DM Sans", sans-serif !important;
+      font-size: 18px !important;
       font-weight: 600 !important;
-      color: #1a1a18 !important;
-      letter-spacing: -0.01em !important;
+      font-optical-sizing: auto !important;
+      line-height: 1 !important;
+      color: #161614 !important;
+      letter-spacing: -0.045em !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+    }
+    body.moba-fullscreen .xbot-header-role {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif !important;
+      font-size: 12.5px !important;
+      font-weight: 500 !important;
+      font-style: italic !important;
+      font-optical-sizing: auto !important;
+      line-height: 1.15 !important;
+      letter-spacing: 0.012em !important;
+      color: #6e6962 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
     }
     body.moba-fullscreen .xbot-header-status {
       display: none !important;
@@ -807,6 +839,22 @@ export function startFreshVisitorId() {
   }
 }
 
+const MOBA_HEADER_ROLE = 'Xbot Specialist'
+
+/** Display name (já no header) + papel fixo, sempre visível. */
+function renderHeaderIdentity() {
+  const text = document.querySelector('.xbot-chatbox .xbot-header .xbot-header-text')
+  if (!text) return false
+  let role = text.querySelector('.xbot-header-role')
+  if (!role) {
+    role = document.createElement('span')
+    role.className = 'xbot-header-role'
+    text.appendChild(role)
+  }
+  if (role.textContent !== MOBA_HEADER_ROLE) role.textContent = MOBA_HEADER_ROLE
+  return true
+}
+
 /** Wordmark Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
 function renderBrandLogo() {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
@@ -824,12 +872,15 @@ function renderBrandLogo() {
   return true
 }
 
-function ensureBrandLogo({ attempts = 12, intervalMs = 250 } = {}) {
-  if (renderBrandLogo()) return
+function ensureHeaderChrome({ attempts = 12, intervalMs = 250 } = {}) {
+  const logoOk = renderBrandLogo()
+  const roleOk = renderHeaderIdentity()
+  if (logoOk && roleOk) return
   let left = attempts
   const timer = setInterval(() => {
     left -= 1
-    if (renderBrandLogo() || left <= 0) clearInterval(timer)
+    const done = renderBrandLogo() && renderHeaderIdentity()
+    if (done || left <= 0) clearInterval(timer)
   }, intervalMs)
 }
 
@@ -906,7 +957,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
-  ensureBrandLogo()
+  ensureHeaderChrome()
   const heroPrompt = readMobaPromptQuery()
   ;[400, 1500, 4000].forEach((ms) => {
     setTimeout(() => {
@@ -921,7 +972,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
         input.dataset.mobaPh = '1'
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
-      ensureBrandLogo()
+      ensureHeaderChrome()
     }, ms)
   })
 }
