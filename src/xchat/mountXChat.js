@@ -3,6 +3,13 @@ import {
   applyMobaBackground,
   writeCachedMobaAppearance,
 } from '../lib/mobaBackground'
+import {
+  VISITOR_LOCALES,
+  installDisplayLangFetch,
+  normalizeVisitorLocale,
+  tLocale,
+  writeExplicitLocale,
+} from '../lib/visitorLocale'
 
 const FULLSCREEN_STYLE_ID = 'xbot-moba-fullscreen-css'
 
@@ -193,11 +200,24 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-header-minimize {
       display: none !important;
     }
+    body.moba-fullscreen .moba-locale--header {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    body.moba-fullscreen .moba-locale--header select {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      font: 500 13px/1 "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      color: #5c5852;
+      padding: 6px 2px;
+      cursor: pointer;
+    }
     body.moba-fullscreen .xbot-moba-brand-logo {
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
-      margin-left: auto;
+      margin-left: 12px;
       font-family: 'Geom', sans-serif;
       font-weight: 600;
       font-size: 21px;
@@ -855,6 +875,38 @@ function renderHeaderIdentity() {
   return true
 }
 
+function renderLocaleSwitch(locale) {
+  const header = document.querySelector('.xbot-chatbox .xbot-header')
+  if (!header) return false
+  const code = normalizeVisitorLocale(locale) || 'pt'
+  let wrap = header.querySelector('.moba-locale--header')
+  if (!wrap) {
+    wrap = document.createElement('label')
+    wrap.className = 'moba-locale moba-locale--header'
+    const select = document.createElement('select')
+    select.setAttribute('aria-label', tLocale(code, 'langLabel'))
+    VISITOR_LOCALES.forEach((item) => {
+      const option = document.createElement('option')
+      option.value = item.id
+      option.textContent = item.label
+      select.appendChild(option)
+    })
+    select.addEventListener('change', () => {
+      const next = normalizeVisitorLocale(select.value)
+      if (!next || next === code) return
+      writeExplicitLocale(next)
+      window.location.reload()
+    })
+    wrap.appendChild(select)
+    const brand = header.querySelector('.xbot-moba-brand-logo')
+    if (brand) header.insertBefore(wrap, brand)
+    else header.appendChild(wrap)
+  }
+  const select = wrap.querySelector('select')
+  if (select && select.value !== code) select.value = code
+  return true
+}
+
 /** Wordmark Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
 function renderBrandLogo() {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
@@ -872,14 +924,15 @@ function renderBrandLogo() {
   return true
 }
 
-function ensureHeaderChrome({ attempts = 12, intervalMs = 250 } = {}) {
+function ensureHeaderChrome({ attempts = 12, intervalMs = 250, locale = 'pt' } = {}) {
   const logoOk = renderBrandLogo()
   const roleOk = renderHeaderIdentity()
-  if (logoOk && roleOk) return
+  const langOk = renderLocaleSwitch(locale)
+  if (logoOk && roleOk && langOk) return
   let left = attempts
   const timer = setInterval(() => {
     left -= 1
-    const done = renderBrandLogo() && renderHeaderIdentity()
+    const done = renderBrandLogo() && renderHeaderIdentity() && renderLocaleSwitch(locale)
     if (done || left <= 0) clearInterval(timer)
   }, intervalMs)
 }
@@ -887,7 +940,7 @@ function ensureHeaderChrome({ attempts = 12, intervalMs = 250 } = {}) {
 /**
  * Monta o XChat em modo fullscreen (única UI do MOBA).
  */
-export async function mountXChatFromBootstrap(bootstrap) {
+export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {}) {
   const xchat = bootstrap?.xchat || {}
   const auth = bootstrap?.auth || {}
   const channelId = xchat.channel_id || bootstrap.channel_id || bootstrap.object_id
@@ -903,6 +956,10 @@ export async function mountXChatFromBootstrap(bootstrap) {
   // Fundo + preload antes do script: o visitante vê a marca enquanto o XChat baixa.
   applyMobaBackground(widget)
   writeCachedMobaAppearance(bootstrap.public_code || bootstrap.object_id, widget)
+
+  const activeLocale = normalizeVisitorLocale(locale) || 'pt'
+  installDisplayLangFetch(activeLocale)
+  document.documentElement.lang = activeLocale === 'pt' ? 'pt-BR' : activeLocale === 'zh' ? 'zh-CN' : activeLocale
 
   injectFullscreenCss()
   document.documentElement.classList.add('moba-fullscreen')
@@ -943,6 +1000,7 @@ export async function mountXChatFromBootstrap(bootstrap) {
     welcomeMessage: widget.welcome_message || undefined,
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
+    locale: activeLocale,
   }
   if (freshSession) {
     initConfig.user = {
@@ -957,8 +1015,9 @@ export async function mountXChatFromBootstrap(bootstrap) {
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
-  ensureHeaderChrome()
+  ensureHeaderChrome({ locale: activeLocale })
   const heroPrompt = readMobaPromptQuery()
+  const placeholder = tLocale(activeLocale, 'placeholder')
   ;[400, 1500, 4000].forEach((ms) => {
     setTimeout(() => {
       if (typeof window.openXBot === 'function') window.openXBot()
@@ -967,12 +1026,12 @@ export async function mountXChatFromBootstrap(bootstrap) {
         box.classList.add('is-open', 'is-visible')
       }
       const input = document.getElementById('xbot-input')
-      if (input && !input.dataset.mobaPh) {
-        input.placeholder = 'Pergunte qualquer coisa'
+      if (input) {
+        input.placeholder = placeholder
         input.dataset.mobaPh = '1'
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
-      ensureHeaderChrome()
+      ensureHeaderChrome({ locale: activeLocale })
     }, ms)
   })
 }

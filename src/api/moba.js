@@ -12,11 +12,12 @@ export function getXchatScriptUrl() {
 /**
  * @param {{ objectId?: string | null, pin?: string | null }} opts
  */
-export async function bootstrapMoba({ objectId, pin } = {}) {
+export async function bootstrapMoba({ objectId, pin, displayLang } = {}) {
   const api = getApiBaseUrl()
   const params = new URLSearchParams()
   if (objectId) params.set('object_id', objectId)
   if (pin) params.set('pin', pin)
+  if (displayLang) params.set('display_lang', displayLang)
   const qs = params.toString()
   // Sempre via /bootstrap: aceita UUID legado e public_code curto.
   const url = `${api}/v1/public/moba/bootstrap${qs ? `?${qs}` : ''}`
@@ -43,7 +44,7 @@ export async function bootstrapMoba({ objectId, pin } = {}) {
 /**
  * @param {{ objectId?: string | null, pin: string }} opts
  */
-export async function unlockMoba({ objectId, pin } = {}) {
+export async function unlockMoba({ objectId, pin, displayLang } = {}) {
   const api = getApiBaseUrl()
   const res = await fetch(`${api}/v1/public/moba/unlock`, {
     method: 'POST',
@@ -52,6 +53,7 @@ export async function unlockMoba({ objectId, pin } = {}) {
     body: JSON.stringify({
       object_id: objectId || null,
       pin,
+      display_lang: displayLang || null,
     }),
   })
   if (!res.ok) {

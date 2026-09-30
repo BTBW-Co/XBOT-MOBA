@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import MobaLocaleSwitch from '../components/MobaLocaleSwitch'
+import { tLocale } from '../lib/visitorLocale'
 
 const PIN_LEN = 4
 
@@ -13,6 +15,7 @@ export default function MobaPinScreen({
   error,
   submitting,
   onSubmit,
+  locale = 'pt',
 }) {
   const [chars, setChars] = useState(['', '', '', ''])
   const inputsRef = useRef([])
@@ -72,12 +75,13 @@ export default function MobaPinScreen({
 
   return (
     <div className="moba-pin">
+      <MobaLocaleSwitch locale={locale} className="moba-locale--pin" />
       <p className="moba-pin-kicker">
         <span className="moba-pin-kicker-dot" />
-        privado
+        {tLocale(locale, 'pinKicker')}
       </p>
       <h1>{headline || displayName || 'MOBA'}</h1>
-      <p className="moba-pin-copy">Informe o PIN de 4 caracteres para abrir a conversa.</p>
+      <p className="moba-pin-copy">{tLocale(locale, 'pinCopy')}</p>
       <form className="moba-pin-form" onSubmit={handleSubmit}>
         <div className="moba-pin-boxes" onPaste={handlePaste}>
           {chars.map((ch, index) => (
@@ -102,7 +106,7 @@ export default function MobaPinScreen({
         </div>
         {error ? <p className="moba-pin-error">{error}</p> : null}
         <button type="submit" className="moba-pin-cta" disabled={chars.join('').length !== PIN_LEN || submitting}>
-          {submitting ? 'Verificando…' : 'Entrar'}
+          {submitting ? tLocale(locale, 'pinChecking') : tLocale(locale, 'pinEnter')}
         </button>
       </form>
     </div>

@@ -1,20 +1,24 @@
+import MobaLocaleSwitch from '../components/MobaLocaleSwitch'
+import { tLocale } from '../lib/visitorLocale'
+
 export const XBOT_SITE_URL = 'https://xbotone.com'
 
-function humanizeError(error, notFound) {
+function humanizeError(error, notFound, locale) {
+  const text = (key) => tLocale(locale, key)
   if (notFound) {
     return {
-      title: 'Página não encontrada',
-      detail: 'Este endereço não existe ou o link está incompleto.',
+      title: text('notFoundTitle'),
+      detail: text('notFoundDetail'),
     }
   }
 
   const raw = String(error || '')
   const lower = raw.toLowerCase()
 
-  if (lower.includes('inválido') || lower.includes('invalid')) {
+  if (lower.includes('inválido') || lower.includes('invalid') || lower.includes('无效')) {
     return {
-      title: 'Link inválido',
-      detail: 'O endereço desta conversa não está no formato esperado.',
+      title: text('invalidTitle'),
+      detail: text('invalidDetail'),
     }
   }
 
@@ -25,21 +29,21 @@ function humanizeError(error, notFound) {
     /\bhttp 5\d\d\b/.test(lower)
   ) {
     return {
-      title: 'Não foi possível abrir',
-      detail: 'A conversa não carregou agora. Tente de novo em instantes ou conheça a plataforma.',
+      title: text('networkTitle'),
+      detail: text('networkDetail'),
     }
   }
 
-  if (lower.includes('http 404') || lower.includes('not found') || lower.includes('não encontr')) {
+  if (lower.includes('http 404') || lower.includes('not found') || lower.includes('não encontr') || lower.includes('找不到')) {
     return {
-      title: 'Canal indisponível',
-      detail: 'Esta conversa não está disponível ou o endereço não existe.',
+      title: text('missingTitle'),
+      detail: text('missingDetail'),
     }
   }
 
   return {
-    title: 'Não foi possível abrir',
-    detail: 'Esta conversa não está disponível neste momento.',
+    title: text('genericTitle'),
+    detail: text('genericDetail'),
   }
 }
 
@@ -90,11 +94,12 @@ function MobaErrorMark() {
   )
 }
 
-export default function MobaErrorScreen({ error, notFound = false }) {
-  const { title, detail } = humanizeError(error, notFound)
+export default function MobaErrorScreen({ error, notFound = false, locale = 'pt' }) {
+  const { title, detail } = humanizeError(error, notFound, locale)
 
   return (
     <main className="moba-error" role="alert">
+      <MobaLocaleSwitch locale={locale} className="moba-locale--error" />
       <MobaErrorMark />
       <p className="moba-error-kicker" aria-hidden="true">
         <span className="moba-error-kicker-dot" />
@@ -108,7 +113,7 @@ export default function MobaErrorScreen({ error, notFound = false }) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Conhecer o <span className="moba-brand">xbot</span>
+        {tLocale(locale, 'cta')}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
             d="M3.5 8h9M8.5 4l4 4-4 4"

@@ -10,6 +10,12 @@ import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import MobaBootLoader from '../components/MobaBootLoader'
 import MobaErrorScreen from './MobaErrorScreen'
 import MobaPinScreen from './MobaPinScreen'
+import {
+  normalizeVisitorLocale,
+  readExplicitLocale,
+  suggestClientLocale,
+  tLocale,
+} from '../lib/visitorLocale'
 
 /** Pinta fundo + cache a partir do widget do bootstrap (se houver). */
 function paintBackgroundFromBootstrap(data, ref) {
@@ -102,6 +108,7 @@ export default function MobaHost({ notFound = false }) {
   })
   const unlockingRef = useRef(false)
 
+  const [locale, setLocale] = useState(() => readExplicitLocale() || suggestClientLocale())
   const [state, setState] = useState({
     phase: notFound ? 'error' : 'loading',
     error: notFound ? 'Página não encontrada' : null,
@@ -109,6 +116,13 @@ export default function MobaHost({ notFound = false }) {
     pinError: null,
     unlocking: false,
   })
+
+  function applySuggestedLocale(data) {
+    const explicit = readExplicitLocale()
+    const next = explicit || normalizeVisitorLocale(data?.suggested_locale) || locale
+    if (next) setLocale(next)
+    return next
+  }
 
   useEffect(() => {
     if (notFound) return undefined
@@ -133,38 +147,40 @@ export default function MobaHost({ notFound = false }) {
     ;(async () => {
       try {
         setState((prev) => ({ ...prev, phase: 'loading', error: null, pinError: null }))
+        const explicit = readExplicitLocale()
         const storedPin = readStoredPin(mobaRef)
         let data
         if (storedPin) {
           try {
-            data = await unlockMoba({ objectId: mobaRef, pin: storedPin })
+            data = await unlockMoba({ objectId: mobaRef, pin: storedPin, displayLang: explicit })
           } catch {
-            data = await bootstrapMoba({ objectId: mobaRef })
+            data = await bootstrapMoba({ objectId: mobaRef, displayLang: explicit })
           }
         } else {
-          data = await bootstrapMoba({ objectId: mobaRef })
+          data = await bootstrapMoba({ objectId: mobaRef, displayLang: explicit })
         }
         if (cancelled) return
+        const activeLocale = applySuggestedLocale(data)
         if (data?.pin_required) {
           setState({
             phase: 'pin',
             error: null,
             preview: data,
-            pinError: storedPin ? 'PIN inválido. Tente de novo.' : null,
+            pinError: storedPin ? tLocale(activeLocale, 'pinInvalid') : null,
             unlocking: false,
           })
           return
         }
         // Assim que o JSON chega: fundo + preload; o loader permanece até o XChat montar.
         paintBackgroundFromBootstrap(data, mobaRef)
-        await mountXChatFromBootstrap(data)
+        await mountXChatFromBootstrap(data, { locale: activeLocale })
         if (cancelled) return
         setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
       } catch (err) {
         if (cancelled) return
         setState({
           phase: 'error',
-          error: err?.message || 'Não foi possível abrir o MOBA',
+          error: err?.message || tLocale(readExplicitLocale() || locale, 'bootError'),
           preview: null,
           pinError: null,
           unlocking: false,
@@ -185,20 +201,22 @@ export default function MobaHost({ notFound = false }) {
     unlockingRef.current = true
     setState((prev) => ({ ...prev, unlocking: true, pinError: null }))
     try {
-      const data = await unlockMoba({ objectId: mobaRef, pin })
+      const explicit = readExplicitLocale()
+      const data = await unlockMoba({ objectId: mobaRef, pin, displayLang: explicit })
+      const activeLocale = applySuggestedLocale(data)
       if (data?.pin_required) {
         unlockingRef.current = false
         setState((prev) => ({
           ...prev,
           unlocking: false,
-          pinError: 'PIN inválido. Tente de novo.',
+          pinError: tLocale(activeLocale, 'pinInvalid'),
         }))
         return
       }
       writeStoredPin(mobaRef, pin)
       paintBackgroundFromBootstrap(data, mobaRef)
       setState({ phase: 'loading', error: null, preview: null, pinError: null, unlocking: false })
-      await mountXChatFromBootstrap(data)
+      await mountXChatFromBootstrap(data, { locale: activeLocale })
       unlockingRef.current = false
       setState({ phase: 'ready', error: null, preview: null, pinError: null, unlocking: false })
     } catch (err) {
@@ -207,13 +225,13 @@ export default function MobaHost({ notFound = false }) {
       setState((prev) => ({
         ...prev,
         unlocking: false,
-        pinError: invalid ? 'PIN inválido. Tente de novo.' : 'Não foi possível validar o PIN.',
+        pinError: invalid ? tLocale(locale, 'pinInvalid') : tLocale(locale, 'pinFailed'),
       }))
     }
   }
 
   if (state.phase === 'error') {
-    return <MobaErrorScreen error={state.error} notFound={notFound} />
+    return <MobaErrorScreen error={state.error} notFound={notFound} locale={locale} />
   }
 
   if (state.phase === 'pin') {
@@ -224,6 +242,7 @@ export default function MobaHost({ notFound = false }) {
         error={state.pinError}
         submitting={state.unlocking}
         onSubmit={handleUnlock}
+        locale={locale}
       />
     )
   }
