@@ -15,6 +15,10 @@ frontend:
     paths:
       - node_modules/**/*
   customHeaders:
+    - pattern: '/version.json'
+      headers:
+        - key: 'Cache-Control'
+          value: 'no-cache'
     - pattern: '**/*'
       headers:
         - key: 'Strict-Transport-Security'
