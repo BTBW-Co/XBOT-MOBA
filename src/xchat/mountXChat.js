@@ -663,6 +663,13 @@ function injectFullscreenCss() {
       stroke: #ffffff !important;
       color: #ffffff !important;
     }
+    body.moba-fullscreen .xbot-send[hidden] {
+      display: none !important;
+    }
+    body.moba-fullscreen #xbot-audio.is-recording {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+    }
 
     body.moba-fullscreen .xbot-footer {
       display: flex !important;
@@ -815,6 +822,36 @@ export function readMobaPromptQuery({ search } = {}) {
   } catch {
     return ''
   }
+}
+
+function syncMobaPrimaryAction(input, audio, send) {
+  const holdAudio = audio.classList.contains('is-recording') || audio.classList.contains('is-uploading')
+  const hasChars = String(input.value || '').length > 0
+  const showAudio = holdAudio || !hasChars
+  audio.hidden = !showAudio
+  send.hidden = !hasChars || holdAudio
+}
+
+/** Microfone no lugar do envio enquanto o campo está vazio. Idempotente com o widget novo. */
+function bindMobaComposerPrimaryAction() {
+  const input = document.getElementById('xbot-input')
+  const audio = document.getElementById('xbot-audio')
+  const send = document.getElementById('xbot-send')
+  const inner = document.querySelector('.xbot-compose-inner')
+  if (!input || !audio || !send || !inner) return false
+  audio.classList.add('xbot-send')
+  audio.classList.remove('xbot-icon-btn')
+  if (send.previousElementSibling !== audio) inner.insertBefore(audio, send)
+  if (inner.lastElementChild !== send) inner.appendChild(send)
+  const sync = () => syncMobaPrimaryAction(input, audio, send)
+  if (input.dataset.mobaPrimaryBound !== '1') {
+    input.dataset.mobaPrimaryBound = '1'
+    input.addEventListener('input', sync)
+    const observer = new MutationObserver(sync)
+    observer.observe(audio, { attributes: true, attributeFilter: ['class'] })
+  }
+  sync()
+  return true
 }
 
 function applyMobaPromptToComposer(prompt) {
@@ -1016,6 +1053,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
   ensureHeaderChrome({ locale: activeLocale })
+  bindMobaComposerPrimaryAction()
   const heroPrompt = readMobaPromptQuery()
   const placeholder = tLocale(activeLocale, 'placeholder')
   ;[400, 1500, 4000].forEach((ms) => {
@@ -1031,6 +1069,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
         input.dataset.mobaPh = '1'
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
+      bindMobaComposerPrimaryAction()
       ensureHeaderChrome({ locale: activeLocale })
     }, ms)
   })
