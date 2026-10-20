@@ -6,6 +6,7 @@ import {
 import {
   VISITOR_LOCALES,
   installDisplayLangFetch,
+  installOperatorSessionFetch,
   normalizeVisitorLocale,
   tLocale,
   writeExplicitLocale,
@@ -996,6 +997,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
 
   const activeLocale = normalizeVisitorLocale(locale) || 'pt'
   installDisplayLangFetch(activeLocale)
+  installOperatorSessionFetch()
   document.documentElement.lang = activeLocale === 'pt' ? 'pt-BR' : activeLocale === 'zh' ? 'zh-CN' : activeLocale
 
   injectFullscreenCss()

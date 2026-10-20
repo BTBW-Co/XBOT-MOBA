@@ -185,3 +185,49 @@ export function installDisplayLangFetch(locale) {
   }
   window.__mobaFetchPatched = true
 }
+
+const OPERATOR_TOKEN_KEY = 'xbot_operator_token'
+
+/** Lê `#xbot_user=` aberto pelo app logado, guarda na aba e tira da URL. */
+export function captureOperatorToken() {
+  if (typeof window === 'undefined') return ''
+  try {
+    const hash = new URLSearchParams(String(window.location.hash || '').replace(/^#/, ''))
+    const fromHash = (hash.get('xbot_user') || '').trim()
+    if (fromHash) {
+      sessionStorage.setItem(OPERATOR_TOKEN_KEY, fromHash)
+      hash.delete('xbot_user')
+      const next = hash.toString()
+      const url = window.location.pathname + window.location.search + (next ? `#${next}` : '')
+      window.history.replaceState(null, '', url)
+    }
+    return sessionStorage.getItem(OPERATOR_TOKEN_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+/** Anexa o access token do operador nas mensagens do XChat, sem trocar o Bearer do canal. */
+export function installOperatorSessionFetch() {
+  if (typeof window === 'undefined') return
+  const token = captureOperatorToken()
+  if (!token || window.__mobaOperatorFetchPatched) return
+  const orig = window.fetch.bind(window)
+  window.fetch = (input, init = {}) => {
+    try {
+      const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url
+      const current = sessionStorage.getItem(OPERATOR_TOKEN_KEY) || ''
+      if (current && raw && /\/v1\/xchat\/message(\?|$)/.test(raw)) {
+        const headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined))
+        if (!headers.has('X-XBot-User-Authorization')) {
+          headers.set('X-XBot-User-Authorization', `Bearer ${current}`)
+        }
+        init = { ...init, headers }
+      }
+    } catch {
+      /* segue o fetch original */
+    }
+    return orig(input, init)
+  }
+  window.__mobaOperatorFetchPatched = true
+}
