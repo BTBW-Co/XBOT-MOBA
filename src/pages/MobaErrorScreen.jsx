@@ -75,7 +75,7 @@ function MobaErrorMark() {
 
       <g className="moba-error-bot">
         <g clipPath="url(#moba-error-clip)">
-          <image href="/brand/icon-blue.jpg" x="30" y="30" width="120" height="120" />
+          <image href="/brand/icon-blue.png" x="30" y="30" width="120" height="120" />
         </g>
       </g>
     </svg>
