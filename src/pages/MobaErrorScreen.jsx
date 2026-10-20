@@ -75,19 +75,7 @@ function MobaErrorMark() {
 
       <g className="moba-error-bot">
         <g clipPath="url(#moba-error-clip)">
-          <g transform="translate(30 30) scale(1.875)">
-            <rect width="64" height="64" fill="#163E69" />
-            <g fill="#5BB8E8">
-              <path d="M20 17a5 5 0 0 1 10 0v5H20v-5z" />
-              <path d="M34 17a5 5 0 0 1 10 0v5H34v-5z" />
-              <path d="M20 20h24a8 8 0 0 1 8 8v16a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8z" />
-            </g>
-            <rect x="17.5" y="25.5" width="29" height="21" rx="4.5" fill="#163E69" />
-            <g className="moba-error-eyes">
-              <rect className="moba-error-eye" x="22" y="30" width="7" height="11" rx="1.5" fill="#5BB8E8" />
-              <rect className="moba-error-eye" x="35" y="30" width="7" height="11" rx="1.5" fill="#5BB8E8" />
-            </g>
-          </g>
+          <image href="/brand/icon-blue.jpg" x="30" y="30" width="120" height="120" />
         </g>
       </g>
     </svg>
