@@ -1,11 +1,10 @@
+import { readVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
 import {
   normalizeVisitorLocale,
   readExplicitLocale,
-  readOperatorToken,
-  storeOperatorSession,
   suggestClientLocale,
   tLocale,
   writeExplicitLocale,
@@ -33,6 +32,9 @@ function errorText(locale, code) {
 
 export default function MobaPhoneHome() {
   const navigate = useNavigate()
+  const params = new URLSearchParams(window.location.search)
+  const objectRef = params.get('object_id') || SITE_CHANNEL
+  const pin = sessionStorage.getItem(`moba.pin.${objectRef}`) || ''
   const [locale, setLocale] = useState('pt')
   const [ready, setReady] = useState(false)
   const [phase, setPhase] = useState('phone')
@@ -49,23 +51,23 @@ export default function MobaPhoneHome() {
     const fromQuery = normalizeVisitorLocale(params.get('lang'))
     if (fromQuery && !readExplicitLocale()) writeExplicitLocale(fromQuery)
     setLocale(suggestClientLocale())
-    if (readOperatorToken()) {
-      navigate(`/${SITE_CHANNEL}`, { replace: true })
+    if (readVisitorIdentity()?.objectRef === objectRef) {
+      navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
       return
     }
     setReady(true)
-  }, [navigate])
+  }, [navigate, objectRef])
 
   function enterConversation(session) {
-    storeOperatorSession(session)
-    navigate(`/${SITE_CHANNEL}`, { replace: true })
+    storeVisitorIdentity(session, objectRef)
+    navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
   }
 
   async function sendCode(nextPhone) {
     setLoading(true)
     setError('')
     try {
-      await startPhoneChallenge({ phone: nextPhone, locale })
+      await startPhoneChallenge({ phone: nextPhone, locale, objectId: objectRef, pin })
       setPhone(nextPhone)
       setDigits(Array(CODE_LENGTH).fill(''))
       setPhase('code')
@@ -91,17 +93,13 @@ export default function MobaPhoneHome() {
     setLoading(true)
     setError('')
     try {
-      const data = await verifyPhoneChallenge({ phone, code })
-      if (!data?.access_token) {
+      const data = await verifyPhoneChallenge({ phone, code, objectId: objectRef, pin })
+      if (!data?.visitor_id) {
         setDigits(Array(CODE_LENGTH).fill(''))
         setError(copy(locale, 'phoneUnknown'))
         return
       }
-      enterConversation({
-        token: data.access_token,
-        name: data.name || '',
-        email: data.email || '',
-      })
+      enterConversation(data)
     } catch (err) {
       setDigits(Array(CODE_LENGTH).fill(''))
       setError(errorText(locale, err?.detail) || copy(locale, 'codeInvalid'))

@@ -1,3 +1,4 @@
+import { readVisitorIdentity, installVisitorIdentityExpiry } from '../lib/mobaVisitorIdentity'
 import { getXchatScriptUrl } from '../api/moba'
 import {
   applyMobaBackground,
@@ -220,7 +221,7 @@ function injectFullscreenCss() {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-left: 12px;
+      margin-left: auto;
       max-width: 42%;
       min-width: 0;
     }
@@ -940,9 +941,13 @@ function renderHeaderIdentity() {
   return true
 }
 
-function renderLocaleSwitch(locale) {
+function renderLocaleSwitch(locale, { enabled = true } = {}) {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header) return false
+  if (!enabled) {
+    header.querySelector('.moba-locale--header')?.remove()
+    return true
+  }
   const code = normalizeVisitorLocale(locale) || 'pt'
   let wrap = header.querySelector('.moba-locale--header')
   if (!wrap) {
@@ -973,9 +978,13 @@ function renderLocaleSwitch(locale) {
 }
 
 /** Wordmark Xbot (mesmo do site) no canto superior direito do header — só marca, sem link. */
-function renderBrandLogo() {
+function renderBrandLogo({ enabled = true } = {}) {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header) return false
+  if (!enabled) {
+    header.querySelector('.xbot-moba-brand-logo')?.remove()
+    return true
+  }
   if (header.querySelector('.xbot-moba-brand-logo')) return true
 
   const mark = document.createElement('span')
@@ -1019,17 +1028,23 @@ function renderOperatorAccount() {
   return true
 }
 
-function ensureHeaderChrome({ attempts = 12, intervalMs = 250, locale = 'pt' } = {}) {
-  const logoOk = renderBrandLogo()
-  const roleOk = renderHeaderIdentity()
-  const langOk = renderLocaleSwitch(locale)
-  const accountOk = renderOperatorAccount()
-  if (logoOk && roleOk && langOk && accountOk) return
+function ensureHeaderChrome({
+  attempts = 12,
+  intervalMs = 250,
+  locale = 'pt',
+  showBrand = true,
+  showLocale = true,
+} = {}) {
+  const paint = () =>
+    renderBrandLogo({ enabled: showBrand }) &&
+    renderHeaderIdentity() &&
+    renderLocaleSwitch(locale, { enabled: showLocale }) &&
+    renderOperatorAccount()
+  if (paint()) return
   let left = attempts
   const timer = setInterval(() => {
     left -= 1
-    const done = renderBrandLogo() && renderHeaderIdentity() && renderLocaleSwitch(locale) && renderOperatorAccount()
-    if (done || left <= 0) clearInterval(timer)
+    if (paint() || left <= 0) clearInterval(timer)
   }, intervalMs)
 }
 
@@ -1048,12 +1063,24 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     throw new Error('Bootstrap incompleto (channel/token)')
   }
 
+  const visitorIdentity = readVisitorIdentity()
+  if (bootstrap.phone_identity_required) installVisitorIdentityExpiry()
+  if (bootstrap.phone_identity_required && visitorIdentity?.channel_id !== String(channelId)) {
+    window.location.replace(`/?object_id=${encodeURIComponent(bootstrap.public_code || channelId)}`)
+    return
+  }
   const widget = xchat.widget || {}
   // Fundo + preload antes do script: o visitante vê a marca enquanto o XChat baixa.
   applyMobaBackground(widget)
   writeCachedMobaAppearance(bootstrap.public_code || bootstrap.object_id, widget)
 
   const activeLocale = normalizeVisitorLocale(locale) || 'pt'
+  const pathCode = String(window.location.pathname || '')
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')[0]
+  const quietHeader = [bootstrap.public_code, pathCode].some(
+    (value) => String(value || '').toUpperCase() === '7XGVD9J',
+  )
   installDisplayLangFetch(activeLocale)
   installOperatorSessionFetch()
   document.documentElement.lang = activeLocale === 'pt' ? 'pt-BR' : activeLocale === 'zh' ? 'zh-CN' : activeLocale
@@ -1065,7 +1092,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   await loadScript(scriptUrl)
   await waitFor(() => typeof window.initXBot === 'function')
 
-  const freshSession = shouldStartFreshSession()
+  const freshSession = !bootstrap.phone_identity_required && shouldStartFreshSession()
   if (freshSession) {
     startFreshVisitorId()
   }
@@ -1099,7 +1126,9 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     browserNotify: true,
     locale: activeLocale,
   }
-  if (freshSession) {
+  if (bootstrap.phone_identity_required) {
+    initConfig.user = { externalUserId: visitorIdentity.visitor_id }
+  } else if (freshSession) {
     initConfig.user = {
       externalUserId: `moba_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     }
@@ -1112,7 +1141,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
-  ensureHeaderChrome({ locale: activeLocale })
+  ensureHeaderChrome({ locale: activeLocale, showBrand: !quietHeader, showLocale: !quietHeader })
   bindMobaComposerPrimaryAction()
   const heroPrompt = readMobaPromptQuery()
   const placeholder = tLocale(activeLocale, 'placeholder')
@@ -1130,7 +1159,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
       bindMobaComposerPrimaryAction()
-      ensureHeaderChrome({ locale: activeLocale })
+      ensureHeaderChrome({ locale: activeLocale, showBrand: !quietHeader, showLocale: !quietHeader })
     }, ms)
   })
 }

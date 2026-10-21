@@ -73,7 +73,7 @@ export async function unlockMoba({ objectId, pin, displayLang } = {}) {
 
 async function postOnboarding(path, body) {
   const api = getApiBaseUrl()
-  const res = await fetch(`${api}/v1/public/onboarding/${path}`, {
+  const res = await fetch(`${api}/v1/public/moba/${path}`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     cache: 'no-store',
@@ -95,10 +95,10 @@ async function postOnboarding(path, body) {
   return data
 }
 
-export function startPhoneChallenge({ phone, locale }) {
-  return postOnboarding('phone', { phone, locale: locale || null })
+export function startPhoneChallenge({ phone, locale, objectId, pin }) {
+  return postOnboarding('phone', { phone, locale: locale || null, object_id: objectId || null, pin: pin || null })
 }
 
-export function verifyPhoneChallenge({ phone, code }) {
-  return postOnboarding('phone/verify', { phone, code })
+export function verifyPhoneChallenge({ phone, code, objectId, pin }) {
+  return postOnboarding('phone/verify', { phone, code, object_id: objectId || null, pin: pin || null })
 }

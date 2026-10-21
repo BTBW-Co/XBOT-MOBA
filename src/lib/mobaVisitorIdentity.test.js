@@ -1,0 +1,35 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readVisitorIdentity, storeVisitorIdentity, installVisitorIdentityExpiry } from './mobaVisitorIdentity.js'
+const values = new Map()
+globalThis.sessionStorage = {
+  getItem: key => values.get(key) || null,
+  setItem: (key, value) => values.set(key, value),
+  removeItem: key => values.delete(key),
+}
+
+test('verified identity survives navigation and expires', () => {
+  values.clear()
+  const data = { visitor_id: 'ext_mv_' + 'a'.repeat(32), channel_id: 'channel', expires_in: 86400 }
+  storeVisitorIdentity(data, '7XGVD9J')
+  assert.equal(readVisitorIdentity().visitor_id, data.visitor_id)
+  assert.equal(readVisitorIdentity().channel_id, 'channel')
+  storeVisitorIdentity({ ...data, expires_in: -1 }, '7XGVD9J')
+  assert.equal(readVisitorIdentity(), null)
+})
+
+test('SMS identity is never accepted as an administrative operator token', () => {
+  storeVisitorIdentity({ visitor_id: 'not-a-visitor-grant', expires_in: 86400 }, '7XGVD9J')
+  assert.equal(readVisitorIdentity(), null)
+  assert.equal(sessionStorage.getItem('xbot_operator_token'), null)
+})
+
+test('server rejection clears even an expired identity and asks for login again', async () => {
+  let destination
+  globalThis.window = { fetch: async () => ({ status: 401 }), location: { replace: url => { destination = url } } }
+  storeVisitorIdentity({ visitor_id: 'ext_mv_' + 'a'.repeat(32), expires_in: -1 }, '7XGVD9J')
+  installVisitorIdentityExpiry()
+  await window.fetch('https://api.example/v1/xchat/history')
+  assert.equal(destination, '/?object_id=7XGVD9J')
+  assert.equal(sessionStorage.getItem('moba_verified_visitor'), null)
+})
