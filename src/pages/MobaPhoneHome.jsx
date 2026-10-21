@@ -245,7 +245,7 @@ export default function MobaPhoneHome() {
         locale,
         object_id: explicitObject || null,
         pin: pin || null,
-        invite_slug: invite?.open ? inviteSlug : null,
+        invite_slug: invite?.missing || invite?.reason === 'full' ? null : inviteSlug || null,
       })
       enterConversation({ ...visitor, name: `${givenName} ${familyName}`.trim(), email, phone: visitor.phone || phone })
     } catch (err) {
