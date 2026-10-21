@@ -187,6 +187,8 @@ export function installDisplayLangFetch(locale) {
 }
 
 const OPERATOR_TOKEN_KEY = 'xbot_operator_token'
+const OPERATOR_NAME_KEY = 'xbot_operator_name'
+const OPERATOR_EMAIL_KEY = 'xbot_operator_email'
 
 /** Lê `#xbot_user=` aberto pelo app logado, guarda na aba e tira da URL. */
 export function captureOperatorToken() {
@@ -194,9 +196,15 @@ export function captureOperatorToken() {
   try {
     const hash = new URLSearchParams(String(window.location.hash || '').replace(/^#/, ''))
     const fromHash = (hash.get('xbot_user') || '').trim()
-    if (fromHash) {
-      sessionStorage.setItem(OPERATOR_TOKEN_KEY, fromHash)
+    const name = (hash.get('xbot_name') || '').trim().slice(0, 80)
+    const email = (hash.get('xbot_email') || '').trim().slice(0, 120)
+    if (fromHash) sessionStorage.setItem(OPERATOR_TOKEN_KEY, fromHash)
+    if (name) sessionStorage.setItem(OPERATOR_NAME_KEY, name)
+    if (email) sessionStorage.setItem(OPERATOR_EMAIL_KEY, email)
+    if (fromHash || name || email) {
       hash.delete('xbot_user')
+      hash.delete('xbot_name')
+      hash.delete('xbot_email')
       const next = hash.toString()
       const url = window.location.pathname + window.location.search + (next ? `#${next}` : '')
       window.history.replaceState(null, '', url)
@@ -204,6 +212,19 @@ export function captureOperatorToken() {
     return sessionStorage.getItem(OPERATOR_TOKEN_KEY) || ''
   } catch {
     return ''
+  }
+}
+
+/** Nome e e-mail do operador logado, gravados junto com o token. */
+export function readOperatorProfile() {
+  if (typeof window === 'undefined') return { name: '', email: '' }
+  try {
+    return {
+      name: sessionStorage.getItem(OPERATOR_NAME_KEY) || '',
+      email: sessionStorage.getItem(OPERATOR_EMAIL_KEY) || '',
+    }
+  } catch {
+    return { name: '', email: '' }
   }
 }
 

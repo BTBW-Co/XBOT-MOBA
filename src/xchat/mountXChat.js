@@ -8,6 +8,7 @@ import {
   installDisplayLangFetch,
   installOperatorSessionFetch,
   normalizeVisitorLocale,
+  readOperatorProfile,
   tLocale,
   writeExplicitLocale,
 } from '../lib/visitorLocale'
@@ -213,6 +214,32 @@ function injectFullscreenCss() {
       color: #5c5852;
       padding: 6px 2px;
       cursor: pointer;
+    }
+    body.moba-fullscreen .moba-operator {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+      max-width: 42%;
+      min-width: 0;
+    }
+    body.moba-fullscreen .moba-operator-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #111111;
+      color: #ffffff;
+      font: 600 12px/28px "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    body.moba-fullscreen .moba-operator-name {
+      font: 500 13px/1.2 "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      color: #1c1c1c;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     body.moba-fullscreen .xbot-moba-brand-logo {
       flex-shrink: 0;
@@ -962,15 +989,46 @@ function renderBrandLogo() {
   return true
 }
 
+function operatorLabel(profile) {
+  const name = (profile?.name || '').trim()
+  if (name) return name
+  const email = (profile?.email || '').trim()
+  if (!email) return ''
+  return email.split('@')[0] || email
+}
+
+/** Conta logada no canto direito do header. Sem sessão, não desenha nada. */
+function renderOperatorAccount() {
+  const header = document.querySelector('.xbot-chatbox .xbot-header')
+  if (!header) return false
+  if (header.querySelector('.moba-operator')) return true
+  const profile = readOperatorProfile()
+  const label = operatorLabel(profile)
+  if (!label) return true
+  const chip = document.createElement('span')
+  chip.className = 'moba-operator'
+  if (profile.email) chip.title = profile.email
+  const avatar = document.createElement('span')
+  avatar.className = 'moba-operator-avatar'
+  avatar.textContent = label.slice(0, 1).toUpperCase()
+  const name = document.createElement('span')
+  name.className = 'moba-operator-name'
+  name.textContent = label
+  chip.append(avatar, name)
+  header.appendChild(chip)
+  return true
+}
+
 function ensureHeaderChrome({ attempts = 12, intervalMs = 250, locale = 'pt' } = {}) {
   const logoOk = renderBrandLogo()
   const roleOk = renderHeaderIdentity()
   const langOk = renderLocaleSwitch(locale)
-  if (logoOk && roleOk && langOk) return
+  const accountOk = renderOperatorAccount()
+  if (logoOk && roleOk && langOk && accountOk) return
   let left = attempts
   const timer = setInterval(() => {
     left -= 1
-    const done = renderBrandLogo() && renderHeaderIdentity() && renderLocaleSwitch(locale)
+    const done = renderBrandLogo() && renderHeaderIdentity() && renderLocaleSwitch(locale) && renderOperatorAccount()
     if (done || left <= 0) clearInterval(timer)
   }, intervalMs)
 }
