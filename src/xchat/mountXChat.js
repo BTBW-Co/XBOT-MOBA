@@ -724,8 +724,8 @@ function injectFullscreenCss() {
     body.moba-fullscreen .xbot-powered {
       font-size: 12px !important;
       color: #8e8e8e !important;
-      text-decoration: none !important;
       letter-spacing: 0.01em;
+      cursor: default !important;
     }
     /* Wordmark xbot (Geom) — mesma tipografia do logo do site / header */
     body.moba-fullscreen .xbot-powered strong {
@@ -735,9 +735,6 @@ function injectFullscreenCss() {
       letter-spacing: -0.04em !important;
       text-transform: lowercase !important;
       color: #1a1a18 !important;
-    }
-    body.moba-fullscreen .xbot-powered:hover strong {
-      color: #1967d2 !important;
     }
 
     body.moba-fullscreen .xbot-inactivity-bar {
