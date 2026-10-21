@@ -103,6 +103,14 @@ export function verifyPhoneChallenge({ phone, code, objectId, pin }) {
   return postOnboarding('phone/verify', { phone, code, object_id: objectId || null, pin: pin || null })
 }
 
+export function fetchPhoneSession({ visitorId, objectId, pin }) {
+  return postOnboarding('phone/session', {
+    visitor_id: visitorId,
+    object_id: objectId || null,
+    pin: pin || null,
+  })
+}
+
 export function savePhoneProfile(body) {
   return postOnboarding('phone/profile', body)
 }

@@ -1,5 +1,10 @@
-import { readVisitorIdentity, installVisitorIdentityExpiry } from '../lib/mobaVisitorIdentity'
-import { getXchatScriptUrl } from '../api/moba'
+import {
+  readVisitorIdentity,
+  installVisitorIdentityExpiry,
+  rememberVisitorProfile,
+  visitorDisplayLabel,
+} from '../lib/mobaVisitorIdentity'
+import { fetchPhoneSession, getXchatScriptUrl } from '../api/moba'
 import {
   applyMobaBackground,
   writeCachedMobaAppearance,
@@ -1006,26 +1011,41 @@ function operatorLabel(profile) {
   return email.split('@')[0] || email
 }
 
-/** Conta logada no canto direito do header. Sem sessão, não desenha nada. */
-function renderOperatorAccount() {
+function avatarInitial(label) {
+  const match = String(label || '').match(/[A-Za-z0-9]/)
+  return (match ? match[0] : String(label || '?').slice(0, 1)).toUpperCase()
+}
+
+/** Pessoa identificada no canto direito do header: conta de operador ou visitante do SMS. */
+function renderOperatorAccount(visitorIdentity) {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header) return false
-  if (header.querySelector('.moba-operator')) return true
   const profile = readOperatorProfile()
-  const label = operatorLabel(profile)
+  const label = operatorLabel(profile) || visitorDisplayLabel(visitorIdentity)
   if (!label) return true
-  const chip = document.createElement('span')
-  chip.className = 'moba-operator'
-  if (profile.email) chip.title = profile.email
-  const avatar = document.createElement('span')
-  avatar.className = 'moba-operator-avatar'
-  avatar.textContent = label.slice(0, 1).toUpperCase()
-  const name = document.createElement('span')
-  name.className = 'moba-operator-name'
-  name.textContent = label
-  chip.append(avatar, name)
-  header.appendChild(chip)
+  const title = (profile.email || visitorIdentity?.email || formatTitlePhone(visitorIdentity)).trim()
+  let chip = header.querySelector('.moba-operator')
+  if (!chip) {
+    chip = document.createElement('span')
+    chip.className = 'moba-operator'
+    const avatar = document.createElement('span')
+    avatar.className = 'moba-operator-avatar'
+    const name = document.createElement('span')
+    name.className = 'moba-operator-name'
+    chip.append(avatar, name)
+    header.appendChild(chip)
+  }
+  if (title) chip.title = title
+  const avatar = chip.querySelector('.moba-operator-avatar')
+  const name = chip.querySelector('.moba-operator-name')
+  if (avatar) avatar.textContent = avatarInitial(label)
+  if (name && name.textContent !== label) name.textContent = label
   return true
+}
+
+function formatTitlePhone(identity) {
+  const digits = String(identity?.phone || '').replace(/\D/g, '')
+  return digits ? `+${digits}` : ''
 }
 
 function ensureHeaderChrome({
@@ -1034,12 +1054,13 @@ function ensureHeaderChrome({
   locale = 'pt',
   showBrand = true,
   showLocale = true,
+  visitorIdentity = null,
 } = {}) {
   const paint = () =>
     renderBrandLogo({ enabled: showBrand }) &&
     renderHeaderIdentity() &&
     renderLocaleSwitch(locale, { enabled: showLocale }) &&
-    renderOperatorAccount()
+    renderOperatorAccount(visitorIdentity)
   if (paint()) return
   let left = attempts
   const timer = setInterval(() => {
@@ -1063,11 +1084,31 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     throw new Error('Bootstrap incompleto (channel/token)')
   }
 
-  const visitorIdentity = readVisitorIdentity()
+  let visitorIdentity = readVisitorIdentity()
   if (bootstrap.phone_identity_required) installVisitorIdentityExpiry()
   if (bootstrap.phone_identity_required && visitorIdentity?.channel_id !== String(channelId)) {
     window.location.replace(`/?object_id=${encodeURIComponent(bootstrap.public_code || channelId)}`)
     return
+  }
+  if (bootstrap.phone_identity_required && visitorIdentity?.visitor_id) {
+    const objectRef = bootstrap.public_code || bootstrap.object_id || channelId
+    try {
+      const pin = sessionStorage.getItem(`moba.pin.${objectRef}`) || ''
+      const session = await fetchPhoneSession({
+        visitorId: visitorIdentity.visitor_id,
+        objectId: objectRef,
+        pin,
+      })
+      if (session?.ok) {
+        visitorIdentity = rememberVisitorProfile({
+          name: session.name,
+          email: session.email,
+          phone: session.phone,
+        }) || visitorIdentity
+      }
+    } catch {
+      /* A credencial local ainda identifica a pessoa enquanto a consulta não responde. */
+    }
   }
   const widget = xchat.widget || {}
   // Fundo + preload antes do script: o visitante vê a marca enquanto o XChat baixa.
@@ -1128,6 +1169,9 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   }
   if (bootstrap.phone_identity_required) {
     initConfig.user = { externalUserId: visitorIdentity.visitor_id }
+    if (visitorIdentity.name) initConfig.user.name = visitorIdentity.name
+    if (visitorIdentity.email) initConfig.user.email = visitorIdentity.email
+    if (visitorIdentity.phone) initConfig.user.phone = visitorIdentity.phone
   } else if (freshSession) {
     initConfig.user = {
       externalUserId: `moba_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
@@ -1141,7 +1185,13 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
-  ensureHeaderChrome({ locale: activeLocale, showBrand: !quietHeader, showLocale: !quietHeader })
+  const headerChrome = {
+    locale: activeLocale,
+    showBrand: !quietHeader,
+    showLocale: !quietHeader,
+    visitorIdentity,
+  }
+  ensureHeaderChrome(headerChrome)
   bindMobaComposerPrimaryAction()
   const heroPrompt = readMobaPromptQuery()
   const placeholder = tLocale(activeLocale, 'placeholder')
@@ -1159,7 +1209,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
       }
       if (heroPrompt) applyMobaPromptToComposer(heroPrompt)
       bindMobaComposerPrimaryAction()
-      ensureHeaderChrome({ locale: activeLocale, showBrand: !quietHeader, showLocale: !quietHeader })
+      ensureHeaderChrome(headerChrome)
     }, ms)
   })
 }

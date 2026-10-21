@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readVisitorIdentity, storeVisitorIdentity, installVisitorIdentityExpiry } from './mobaVisitorIdentity.js'
+import {
+  readVisitorIdentity,
+  storeVisitorIdentity,
+  installVisitorIdentityExpiry,
+  rememberVisitorProfile,
+  visitorDisplayLabel,
+} from './mobaVisitorIdentity.js'
 const values = new Map()
 const memoryStorage = {
   getItem: key => values.get(key) || null,
@@ -24,6 +30,18 @@ test('SMS identity is never accepted as an administrative operator token', () =>
   storeVisitorIdentity({ visitor_id: 'not-a-visitor-grant', expires_in: 86400 }, '7XGVD9J')
   assert.equal(readVisitorIdentity(), null)
   assert.equal(sessionStorage.getItem('xbot_operator_token'), null)
+})
+
+test('phone login keeps the person on the credential and shows the name', () => {
+  values.clear()
+  storeVisitorIdentity({ visitor_id: 'ext_mv_' + 'b'.repeat(32), channel_id: 'channel', expires_in: 86400 }, '7XGVD9J')
+  const saved = rememberVisitorProfile({ name: 'Ana', email: 'ana@example.com', phone: '5554981000000' })
+  assert.equal(saved.name, 'Ana')
+  assert.equal(readVisitorIdentity().email, 'ana@example.com')
+  assert.equal(visitorDisplayLabel(readVisitorIdentity()), 'Ana')
+  rememberVisitorProfile({ name: '', email: '', phone: '' })
+  assert.equal(readVisitorIdentity().name, 'Ana')
+  assert.equal(visitorDisplayLabel({ phone: '5554981000000' }), '+55 (54) 98100-0000')
 })
 
 test('server rejection clears even an expired identity and asks for login again', async () => {

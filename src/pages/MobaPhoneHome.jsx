@@ -149,7 +149,7 @@ export default function MobaPhoneHome() {
         object_id: objectRef,
         pin: pin || null,
       })
-      enterConversation(visitor)
+      enterConversation({ ...visitor, name, email, phone: visitor.phone || phone })
     } catch (err) {
       setError(errorText(locale, err?.detail) || copy(locale, 'profileInvalid'))
     } finally {

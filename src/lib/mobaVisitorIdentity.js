@@ -34,6 +34,43 @@ export function storeVisitorIdentity(data, objectRef) {
   writeStored(JSON.stringify(value))
 }
 
+export function rememberVisitorProfile(patch) {
+  try {
+    const current = JSON.parse(readStored() || 'null')
+    if (!current?.visitor_id) return null
+    const next = { ...current }
+    ;['name', 'email', 'phone'].forEach((key) => {
+      const value = String(patch?.[key] || '').trim()
+      if (value) next[key] = value
+    })
+    writeStored(JSON.stringify(next))
+    return next
+  } catch {
+    return null
+  }
+}
+
+export function formatVisitorPhone(digits) {
+  const value = String(digits || '').replace(/\D/g, '')
+  if (!value) return ''
+  if (value.startsWith('55') && (value.length === 12 || value.length === 13)) {
+    const national = value.slice(4)
+    const pretty = national.length === 9
+      ? `${national.slice(0, 5)}-${national.slice(5)}`
+      : `${national.slice(0, 4)}-${national.slice(4)}`
+    return `+55 (${value.slice(2, 4)}) ${pretty}`
+  }
+  return `+${value}`
+}
+
+export function visitorDisplayLabel(identity) {
+  const name = String(identity?.name || '').trim()
+  if (name) return name
+  const email = String(identity?.email || '').trim()
+  if (email && !email.endsWith('@placeholder.local')) return email.split('@')[0] || email
+  return formatVisitorPhone(identity?.phone)
+}
+
 export function installVisitorIdentityExpiry() {
   if (window.__mobaVisitorExpiryInstalled) return
   const original = window.fetch.bind(window)
