@@ -496,6 +496,157 @@ body.moba-has-bg .moba-boot {
   position: relative;
 }
 
+.moba-gate {
+  min-height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  background: #ffffff;
+  color: #1c1c1c;
+  padding: 4rem 1.5rem 2rem;
+  box-sizing: border-box;
+}
+
+.moba-gate-main {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.moba-gate-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+  margin-bottom: 2rem;
+}
+
+.moba-gate-title {
+  margin: 0;
+  font-family: Newsreader, 'Iowan Old Style', Palatino, Georgia, serif;
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.moba-gate-sub {
+  margin: 0.75rem 0 0;
+  max-width: 22rem;
+  font-size: 15px;
+  line-height: 1.35;
+  color: #8a8a8a;
+}
+
+.moba-gate-form {
+  margin-top: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.moba-gate-label {
+  font-size: 13px;
+  color: #6f6f6f;
+}
+
+.moba-gate-row,
+.moba-gate-digits {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.moba-gate-digits {
+  justify-content: space-between;
+}
+
+.moba-gate-input {
+  border: 1px solid #e6e6e6;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1c1c1c;
+  outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.moba-gate-input:focus {
+  border-color: #1c1c1c;
+}
+
+.moba-gate-country {
+  width: 5.5rem;
+  text-align: center;
+}
+
+.moba-gate-national {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.moba-gate-digit {
+  width: 2.75rem;
+  height: 3.5rem;
+  padding: 0;
+  text-align: center;
+  font-size: 22px;
+}
+
+.moba-gate-submit {
+  margin-top: 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: #111111;
+  color: #ffffff;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+}
+
+.moba-gate-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.moba-gate-error {
+  margin: 0;
+  font-size: 13px;
+  color: #b42318;
+}
+
+.moba-gate-links {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.moba-gate-links button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: #6f6f6f;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.moba-gate-links button:last-child {
+  color: #1c1c1c;
+}
+
+.moba-gate-links button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

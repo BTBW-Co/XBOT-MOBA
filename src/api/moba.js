@@ -70,3 +70,35 @@ export async function unlockMoba({ objectId, pin, displayLang } = {}) {
   }
   return res.json()
 }
+
+async function postOnboarding(path, body) {
+  const api = getApiBaseUrl()
+  const res = await fetch(`${api}/v1/public/onboarding/${path}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    cache: 'no-store',
+    body: JSON.stringify(body),
+  })
+  let data = {}
+  try {
+    data = await res.json()
+  } catch {
+    data = {}
+  }
+  if (!res.ok) {
+    const detail = typeof data?.detail === 'string' ? data.detail : ''
+    const err = new Error(detail || `HTTP ${res.status}`)
+    err.status = res.status
+    err.detail = detail
+    throw err
+  }
+  return data
+}
+
+export function startPhoneChallenge({ phone, locale }) {
+  return postOnboarding('phone', { phone, locale: locale || null })
+}
+
+export function verifyPhoneChallenge({ phone, code }) {
+  return postOnboarding('phone/verify', { phone, code })
+}
