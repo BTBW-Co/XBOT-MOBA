@@ -1074,7 +1074,7 @@ function ensureHeaderChrome({
 /**
  * Monta o XChat em modo fullscreen (única UI do MOBA).
  */
-export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {}) {
+export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', personal: personalRequested = false } = {}) {
   const xchat = bootstrap?.xchat || {}
   const auth = bootstrap?.auth || {}
   const channelId = xchat.channel_id || bootstrap.channel_id || bootstrap.object_id
@@ -1087,19 +1087,24 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   }
 
   let visitorIdentity = readVisitorIdentity()
-  if (bootstrap.phone_identity_required) installVisitorIdentityExpiry()
-  if (bootstrap.phone_identity_required && visitorIdentity?.channel_id !== String(channelId)) {
-    window.location.replace(`/?object_id=${encodeURIComponent(bootstrap.public_code || channelId)}`)
+  const pathCode = String(window.location.pathname || '')
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')[0]
+  const openedByCode = Boolean(pathCode)
+  const personal = personalRequested === true || (bootstrap.phone_identity_required && !openedByCode)
+  if (personal) installVisitorIdentityExpiry()
+  if (personal && visitorIdentity?.channel_id !== String(channelId)) {
+    try {
+      localStorage.removeItem('moba_verified_visitor')
+      sessionStorage.removeItem('moba_verified_visitor')
+    } catch { /* storage indisponível */ }
+    window.location.replace('/')
     return
   }
-  if (bootstrap.phone_identity_required && visitorIdentity?.visitor_id) {
-    const objectRef = bootstrap.public_code || bootstrap.object_id || channelId
+  if (personal && visitorIdentity?.visitor_id) {
     try {
-      const pin = sessionStorage.getItem(`moba.pin.${objectRef}`) || ''
       const session = await fetchPhoneSession({
         visitorId: visitorIdentity.visitor_id,
-        objectId: objectRef,
-        pin,
       })
       if (session?.ok) {
         visitorIdentity = rememberVisitorProfile({
@@ -1118,14 +1123,8 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   writeCachedMobaAppearance(bootstrap.public_code || bootstrap.object_id, widget)
 
   const activeLocale = normalizeVisitorLocale(locale) || 'pt'
-  const pathCode = String(window.location.pathname || '')
-    .replace(/^\/+|\/+$/g, '')
-    .split('/')[0]
-  const quietHeader = [bootstrap.public_code, pathCode].some(
-    (value) => String(value || '').toUpperCase() === '7XGVD9J',
-  )
   installDisplayLangFetch(activeLocale)
-  installOperatorSessionFetch()
+  if (!personal) installOperatorSessionFetch()
   document.documentElement.lang = activeLocale === 'pt' ? 'pt-BR' : activeLocale === 'zh' ? 'zh-CN' : activeLocale
 
   injectFullscreenCss()
@@ -1156,7 +1155,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     token,
     apiBaseUrl,
     context,
-    botName: bootstrap.phone_identity_required ? 'Aprendiz' : (widget.bot_name || bootstrap.display_name || 'Xbot'),
+    botName: personal ? 'Aprendiz' : (widget.bot_name || bootstrap.display_name || 'Xbot'),
     botAvatar: widget.bot_avatar_url || '',
     userAvatar: widget.user_avatar_url || '',
     themeColor: widget.theme_color || '#0073ea',
@@ -1164,12 +1163,12 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
       widget.choice_style === 'glass_light' || widget.choice_style === 'glass_dark'
         ? widget.choice_style
         : 'classic',
-    welcomeMessage: bootstrap.phone_identity_required ? undefined : (widget.welcome_message || undefined),
+    welcomeMessage: personal ? undefined : (widget.welcome_message || undefined),
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
     locale: activeLocale,
   }
-  if (bootstrap.phone_identity_required) {
+  if (personal) {
     initConfig.user = { externalUserId: visitorIdentity.visitor_id }
     if (visitorIdentity.name) initConfig.user.name = visitorIdentity.name
     if (visitorIdentity.email) initConfig.user.email = visitorIdentity.email
@@ -1189,10 +1188,10 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
   window.openXBot()
   const headerChrome = {
     locale: activeLocale,
-    showBrand: !quietHeader,
-    showLocale: !quietHeader,
+    showBrand: true,
+    showLocale: true,
     visitorIdentity,
-    headerRole: bootstrap.phone_identity_required ? '' : MOBA_HEADER_ROLE,
+    headerRole: personal ? tLocale(activeLocale, 'assistantRole') : MOBA_HEADER_ROLE,
   }
   ensureHeaderChrome(headerChrome)
   bindMobaComposerPrimaryAction()

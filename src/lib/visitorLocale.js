@@ -23,6 +23,7 @@ const COPY = {
   pt: {
     langLabel: 'Idioma',
     placeholder: 'Pergunte qualquer coisa',
+    assistantRole: 'Assistente pessoal',
     pinKicker: 'privado',
     pinCopy: 'Informe o PIN de 4 caracteres para abrir a conversa.',
     pinInvalid: 'PIN inválido. Tente de novo.',
@@ -95,6 +96,7 @@ const COPY = {
   en: {
     langLabel: 'Language',
     placeholder: 'Ask anything',
+    assistantRole: 'Personal assistant',
     pinKicker: 'private',
     pinCopy: 'Enter the 4-character PIN to open the conversation.',
     pinInvalid: 'Invalid PIN. Try again.',
@@ -167,6 +169,7 @@ const COPY = {
   es: {
     langLabel: 'Idioma',
     placeholder: 'Pregunta lo que quieras',
+    assistantRole: 'Asistente personal',
     pinKicker: 'privado',
     pinCopy: 'Introduce el PIN de 4 caracteres para abrir la conversación.',
     pinInvalid: 'PIN no válido. Inténtalo de nuevo.',
@@ -239,6 +242,7 @@ const COPY = {
   zh: {
     langLabel: '语言',
     placeholder: '随便问',
+    assistantRole: '个人助理',
     pinKicker: '私密',
     pinCopy: '输入 4 位 PIN 以打开对话。',
     pinInvalid: 'PIN 无效，请重试。',

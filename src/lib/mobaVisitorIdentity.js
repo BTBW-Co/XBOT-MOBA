@@ -82,7 +82,9 @@ export function installVisitorIdentityExpiry() {
       try { identity = JSON.parse(readStored() || 'null') } catch { identity = null }
       if (identity) {
         clearStored()
-        window.location.replace(`/?object_id=${encodeURIComponent(identity.objectRef)}`)
+        const ref = identity.objectRef
+        const dest = !ref || ref === 'personal' ? '/' : `/?object_id=${encodeURIComponent(ref)}`
+        window.location.replace(dest)
       }
     }
     return response

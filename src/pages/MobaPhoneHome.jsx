@@ -1,9 +1,11 @@
 import { readVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import PhoneCountryField from '../components/PhoneCountryField'
 import TurnstileCheck from '../components/TurnstileCheck'
-import { fetchCurrentTerm, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import MobaBootLoader from '../components/MobaBootLoader'
+import { bootstrapMoba, fetchCurrentTerm, fetchInvite, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import { getCountryCallingCode } from 'libphonenumber-js/min'
 import { resolvePhone, suggestIso } from '../lib/phoneInput'
 import {
@@ -14,7 +16,7 @@ import {
   writeExplicitLocale,
 } from '../lib/visitorLocale'
 
-const SITE_CHANNEL = '7XGVD9J'
+const PERSONAL_REF = 'personal'
 const CODE_LENGTH = 6
 
 function copy(locale, key, vars = {}) {
@@ -49,11 +51,50 @@ function initialPhone() {
   return { iso, digits: getCountryCallingCode(iso) }
 }
 
+function PersonalAssistant({ locale }) {
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const data = await bootstrapMoba({ displayLang: locale })
+        if (cancelled) return
+        await mountXChatFromBootstrap(data, { locale, personal: true })
+      } catch {
+        if (!cancelled) setFailed(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+      document.body.classList.remove('moba-xchat-live', 'moba-fullscreen', 'moba-has-bg')
+      document.documentElement.style.removeProperty('--moba-bg-image')
+      document.documentElement.style.removeProperty('--moba-bg-opacity')
+    }
+  }, [locale])
+
+  if (failed) {
+    return (
+      <div className="moba-gate">
+        <p className="moba-gate-error">{copy(locale, 'bootError')}</p>
+      </div>
+    )
+  }
+  return (
+    <div className="moba-viewport" aria-busy="true">
+      <MobaBootLoader />
+    </div>
+  )
+}
+
 export default function MobaPhoneHome() {
   const navigate = useNavigate()
+  const inviteSlug = (useParams().slug || '').trim().toLowerCase()
   const params = new URLSearchParams(window.location.search)
-  const objectRef = params.get('object_id') || SITE_CHANNEL
-  const pin = sessionStorage.getItem(`moba.pin.${objectRef}`) || ''
+  const explicitObject = (params.get('object_id') || '').trim()
+  const personal = !explicitObject
+  const objectRef = explicitObject || PERSONAL_REF
+  const pin = explicitObject ? (sessionStorage.getItem(`moba.pin.${explicitObject}`) || '') : ''
   const [locale, setLocale] = useState('pt')
   const [ready, setReady] = useState(false)
   const [phase, setPhase] = useState('phone')
@@ -67,6 +108,7 @@ export default function MobaPhoneHome() {
   const [term, setTerm] = useState(null)
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '', company: '', password: '' })
+  const [invite, setInvite] = useState(null)
   const codeRefs = useRef([])
 
   useEffect(() => {
@@ -74,15 +116,40 @@ export default function MobaPhoneHome() {
     const fromQuery = normalizeVisitorLocale(params.get('lang'))
     if (fromQuery && !readExplicitLocale()) writeExplicitLocale(fromQuery)
     setLocale(suggestClientLocale())
-    if (readVisitorIdentity()?.objectRef === objectRef) {
+    const identity = readVisitorIdentity()
+    if (personal && identity?.objectRef === PERSONAL_REF) {
+      setPhase('chat')
+      setReady(true)
+      return
+    }
+    if (!personal && identity?.objectRef === objectRef) {
       navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
       return
     }
     setReady(true)
-  }, [navigate, objectRef])
+  }, [navigate, objectRef, personal])
+
+  useEffect(() => {
+    if (!inviteSlug) return
+    let cancelled = false
+    fetchInvite(inviteSlug)
+      .then((data) => {
+        if (!cancelled) setInvite(data)
+      })
+      .catch(() => {
+        if (!cancelled) setInvite({ missing: true })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [inviteSlug])
 
   function enterConversation(session) {
     storeVisitorIdentity(session, objectRef)
+    if (personal) {
+      setPhase('chat')
+      return
+    }
     navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
   }
 
@@ -90,7 +157,13 @@ export default function MobaPhoneHome() {
     setLoading(true)
     setError('')
     try {
-      await startPhoneChallenge({ phone: nextPhone, locale, objectId: objectRef, pin, turnstileToken: token })
+      await startPhoneChallenge({
+        phone: nextPhone,
+        locale,
+        objectId: explicitObject || null,
+        pin,
+        turnstileToken: token,
+      })
       setPhone(nextPhone)
       setDigits(Array(CODE_LENGTH).fill(''))
       setPhase('code')
@@ -120,7 +193,12 @@ export default function MobaPhoneHome() {
     setLoading(true)
     setError('')
     try {
-      const data = await verifyPhoneChallenge({ phone, code, objectId: objectRef, pin })
+      const data = await verifyPhoneChallenge({
+        phone,
+        code,
+        objectId: explicitObject || null,
+        pin,
+      })
       if (!data?.visitor_id) {
         setDigits(Array(CODE_LENGTH).fill(''))
         setError(copy(locale, 'phoneUnknown'))
@@ -168,8 +246,9 @@ export default function MobaPhoneHome() {
         password: profile.password,
         accept_terms_id: term?.id || null,
         locale,
-        object_id: objectRef,
+        object_id: explicitObject || null,
         pin: pin || null,
+        invite_slug: invite?.open ? inviteSlug : null,
       })
       enterConversation({ ...visitor, name: `${givenName} ${familyName}`.trim(), email, phone: visitor.phone || phone })
     } catch (err) {
@@ -205,6 +284,10 @@ export default function MobaPhoneHome() {
     return <div className="moba-gate" />
   }
 
+  if (phase === 'chat') {
+    return <PersonalAssistant locale={locale} />
+  }
+
   const title =
     phase === 'phone' ? copy(locale, 'phoneTitle') : phase === 'code' ? copy(locale, 'codeTitle') : copy(locale, 'profileTitle')
   const subtitle =
@@ -219,6 +302,19 @@ export default function MobaPhoneHome() {
       <main className="moba-gate-main">
         <img className="moba-gate-icon" src="/onboarding-icon.png" alt="" width="56" height="56" />
         <h1 className="moba-gate-title">{title}</h1>
+        {inviteSlug ? (
+          <p className="moba-gate-sub">
+            {invite?.missing
+              ? 'Este convite não existe.'
+              : invite?.open
+                ? `Convite de ${invite.name}.`
+                : invite?.reason === 'full'
+                  ? `Os convites de ${invite?.name || 'esta pessoa'} acabaram.`
+                  : invite
+                    ? `O convite de ${invite.name} abre quando as ferramentas forem liberadas.`
+                    : 'Conferindo o convite.'}
+          </p>
+        ) : null}
         <p className="moba-gate-sub">{subtitle}</p>
 
         {phase === 'phone' ? (

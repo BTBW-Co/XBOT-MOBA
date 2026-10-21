@@ -117,6 +117,22 @@ export function fetchPhoneSession({ visitorId, objectId, pin }) {
   })
 }
 
+export function fetchInvite(slug) {
+  const api = getApiBaseUrl()
+  return fetch(`${api}/v1/public/moba/invite/${encodeURIComponent(slug)}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).then(async (res) => {
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const err = new Error(data?.detail || `HTTP ${res.status}`)
+      err.status = res.status
+      throw err
+    }
+    return data
+  })
+}
+
 export function savePhoneProfile(body) {
   return postOnboarding('phone/profile', body)
 }

@@ -53,3 +53,13 @@ test('server rejection clears even an expired identity and asks for login again'
   assert.equal(destination, '/?object_id=7XGVD9J')
   assert.equal(sessionStorage.getItem('moba_verified_visitor'), null)
 })
+
+test('personal assistant expiry returns to the phone home', async () => {
+  let destination
+  globalThis.window = { fetch: async () => ({ status: 401 }), location: { replace: url => { destination = url } } }
+  delete window.__mobaVisitorExpiryInstalled
+  storeVisitorIdentity({ visitor_id: 'ext_mv_' + 'c'.repeat(32), expires_in: 86400 }, 'personal')
+  installVisitorIdentityExpiry()
+  await window.fetch('https://api.example/v1/xchat/history')
+  assert.equal(destination, '/')
+})
