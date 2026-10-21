@@ -932,17 +932,21 @@ export function startFreshVisitorId() {
 
 const MOBA_HEADER_ROLE = 'Xbot Specialist'
 
-/** Display name (já no header) + papel fixo, sempre visível. */
-function renderHeaderIdentity() {
+/** Display name (já no header). No acesso por telefone o papel some: quem fala é o Aprendiz. */
+function renderHeaderIdentity(role = MOBA_HEADER_ROLE) {
   const text = document.querySelector('.xbot-chatbox .xbot-header .xbot-header-text')
   if (!text) return false
-  let role = text.querySelector('.xbot-header-role')
+  let roleEl = text.querySelector('.xbot-header-role')
   if (!role) {
-    role = document.createElement('span')
-    role.className = 'xbot-header-role'
-    text.appendChild(role)
+    roleEl?.remove()
+    return true
   }
-  if (role.textContent !== MOBA_HEADER_ROLE) role.textContent = MOBA_HEADER_ROLE
+  if (!roleEl) {
+    roleEl = document.createElement('span')
+    roleEl.className = 'xbot-header-role'
+    text.appendChild(roleEl)
+  }
+  if (roleEl.textContent !== role) roleEl.textContent = role
   return true
 }
 
@@ -1055,10 +1059,11 @@ function ensureHeaderChrome({
   showBrand = true,
   showLocale = true,
   visitorIdentity = null,
+  headerRole = MOBA_HEADER_ROLE,
 } = {}) {
   const paint = () =>
     renderBrandLogo({ enabled: showBrand }) &&
-    renderHeaderIdentity() &&
+    renderHeaderIdentity(headerRole) &&
     renderLocaleSwitch(locale, { enabled: showLocale }) &&
     renderOperatorAccount(visitorIdentity)
   if (paint()) return
@@ -1154,7 +1159,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     token,
     apiBaseUrl,
     context,
-    botName: widget.bot_name || bootstrap.display_name || 'Xbot',
+    botName: bootstrap.phone_identity_required ? 'Aprendiz' : (widget.bot_name || bootstrap.display_name || 'Xbot'),
     botAvatar: widget.bot_avatar_url || '',
     userAvatar: widget.user_avatar_url || '',
     themeColor: widget.theme_color || '#0073ea',
@@ -1162,7 +1167,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
       widget.choice_style === 'glass_light' || widget.choice_style === 'glass_dark'
         ? widget.choice_style
         : 'classic',
-    welcomeMessage: widget.welcome_message || undefined,
+    welcomeMessage: bootstrap.phone_identity_required ? undefined : (widget.welcome_message || undefined),
     // Notificação nativa do browser + som do app ao receber mensagem do bot.
     browserNotify: true,
     locale: activeLocale,
@@ -1190,6 +1195,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt' } = {})
     showBrand: !quietHeader,
     showLocale: !quietHeader,
     visitorIdentity,
+    headerRole: bootstrap.phone_identity_required ? '' : MOBA_HEADER_ROLE,
   }
   ensureHeaderChrome(headerChrome)
   bindMobaComposerPrimaryAction()
