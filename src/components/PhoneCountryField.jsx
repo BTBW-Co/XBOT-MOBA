@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { caretForDigitCount, digitsForCountry, listCountries, resolvePhone } from '../lib/phoneInput'
+import { caretForDigitCount, listCountries, readPhoneField, resolvePhone, splitPhoneInput } from '../lib/phoneInput'
 
 export default function PhoneCountryField({
   locale,
@@ -16,9 +16,10 @@ export default function PhoneCountryField({
   const inputRef = useRef(null)
   const searchRef = useRef(null)
   const caretDigits = useRef(null)
+  const [draft, setDraft] = useState('')
   const countries = useMemo(() => listCountries(locale), [locale])
   const selected = countries.find((country) => country.iso === iso) || countries.find((country) => country.iso === 'BR')
-  const display = resolvePhone(digits, iso).display
+  const display = draft || resolvePhone(digits, iso).display
   const needle = query.trim().toLowerCase().replace(/^\+/, '')
   const visible = countries.filter((country) => {
     if (!needle) return true
@@ -55,22 +56,25 @@ export default function PhoneCountryField({
     }
   }, [open])
 
-  function emit(nextDigits, nextIso) {
-    onChange({ digits: nextDigits, iso: nextIso })
+  function emit(nextDigits, nextIso, pending) {
+    onChange({ digits: nextDigits, iso: nextIso, pending: Boolean(pending) })
   }
 
   function onType(event) {
     const raw = event.target.value
     const caret = event.target.selectionStart ?? raw.length
     caretDigits.current = raw.slice(0, caret).replace(/\D/g, '').length
-    const nextDigits = raw.replace(/\D/g, '').slice(0, 15)
-    const parsed = resolvePhone(nextDigits, iso)
-    emit(nextDigits, parsed.pending ? iso : parsed.iso)
+    const next = readPhoneField(raw, iso)
+    setDraft(next.pending ? next.display : '')
+    emit(next.digits, next.iso, next.pending)
   }
 
   function choose(country) {
     caretDigits.current = null
-    emit(digitsForCountry(country.iso, digits, iso), country.iso)
+    const split = draft ? splitPhoneInput(draft) : null
+    const national = split?.separated ? split.national : resolvePhone(digits, iso).national
+    setDraft('')
+    emit(`${country.code}${national}`.replace(/\D/g, '').slice(0, 15), country.iso, false)
     setOpen(false)
     setQuery('')
     inputRef.current?.focus()

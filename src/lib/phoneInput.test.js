@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { caretForDigitCount, digitsForCountry, displayPhone, resolvePhone, suggestIso } from './phoneInput.js'
+import { caretForDigitCount, digitsForCountry, displayPhone, readPhoneField, resolvePhone, suggestIso } from './phoneInput.js'
 
 test('brasil formata DDD e celular', () => {
   assert.equal(displayPhone('BR', '54981387397'), '+55 (54) 98138-7397')
@@ -16,6 +16,16 @@ test('trocar o DDI no número troca o país', () => {
   assert.equal(resolvePhone('54', 'BR').iso, 'AR')
   assert.equal(resolvePhone('1', 'BR').iso, 'US')
   assert.equal(resolvePhone('1', 'BR').display, '+1')
+})
+
+test('editar o DDI troca o país e um código inválido não', () => {
+  const argentina = readPhoneField('+54 (54) 98138-7397', 'BR')
+  assert.equal(argentina.iso, 'AR')
+  assert.equal(argentina.pending, false)
+  const invalid = readPhoneField('+8 (54) 98138-7397', 'BR')
+  assert.equal(invalid.iso, 'BR')
+  assert.equal(invalid.pending, true)
+  assert.match(invalid.display, /^\+8 /)
 })
 
 test('código incompleto não troca a bandeira', () => {

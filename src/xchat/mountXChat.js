@@ -1049,6 +1049,14 @@ function formatTitlePhone(identity) {
   return digits ? `+${digits}` : ''
 }
 
+function renderHeaderName(name) {
+  const el = document.querySelector('.xbot-chatbox .xbot-header .xbot-header-name')
+  const label = String(name || '').trim()
+  if (!el || !label) return Boolean(el)
+  if (el.textContent !== label) el.textContent = label
+  return true
+}
+
 function ensureHeaderChrome({
   attempts = 12,
   intervalMs = 250,
@@ -1057,9 +1065,11 @@ function ensureHeaderChrome({
   showLocale = true,
   visitorIdentity = null,
   headerRole = MOBA_HEADER_ROLE,
+  headerName = '',
 } = {}) {
   const paint = () =>
     renderBrandLogo({ enabled: showBrand }) &&
+    renderHeaderName(headerName) &&
     renderHeaderIdentity(headerRole) &&
     renderLocaleSwitch(locale, { enabled: showLocale }) &&
     renderOperatorAccount(visitorIdentity)
@@ -1118,6 +1128,9 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
     }
   }
   const widget = xchat.widget || {}
+  const assistant = bootstrap.assistant && typeof bootstrap.assistant === 'object' ? bootstrap.assistant : {}
+  const assistantName = String(assistant.name || assistant.display_name || '').trim()
+  const assistantRole = String(assistant.role || '').trim()
   // Fundo + preload antes do script: o visitante vê a marca enquanto o XChat baixa.
   applyMobaBackground(widget)
   writeCachedMobaAppearance(bootstrap.public_code || bootstrap.object_id, widget)
@@ -1155,7 +1168,9 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
     token,
     apiBaseUrl,
     context,
-    botName: personal ? 'Aprendiz' : (widget.bot_name || bootstrap.display_name || 'Xbot'),
+    botName: personal
+      ? (assistantName || widget.bot_name || bootstrap.display_name || 'MOBA')
+      : (widget.bot_name || bootstrap.display_name || 'Xbot'),
     botAvatar: widget.bot_avatar_url || '',
     userAvatar: widget.user_avatar_url || '',
     themeColor: widget.theme_color || '#0073ea',
@@ -1188,10 +1203,11 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
   window.openXBot()
   const headerChrome = {
     locale: activeLocale,
-    showBrand: true,
-    showLocale: true,
+    showBrand: !personal,
+    showLocale: personal ? assistant.show_language === true : true,
     visitorIdentity,
-    headerRole: personal ? tLocale(activeLocale, 'assistantRole') : MOBA_HEADER_ROLE,
+    headerName: personal ? initConfig.botName : '',
+    headerRole: personal ? (assistantRole || tLocale(activeLocale, 'assistantRole')) : MOBA_HEADER_ROLE,
   }
   ensureHeaderChrome(headerChrome)
   bindMobaComposerPrimaryAction()

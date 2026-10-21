@@ -45,6 +45,23 @@ export function isoForCalling(callingCode) {
   return list[0] || ''
 }
 
+/** exact = DDI de um país. prefix = ainda incompleto. invalid = não existe. */
+export function classifyCalling(callingCode) {
+  const code = String(callingCode || '')
+  if (!code) return 'empty'
+  if (callingIndex.has(code)) return 'exact'
+  for (const known of callingIndex.keys()) {
+    if (known.startsWith(code)) return 'prefix'
+  }
+  return 'invalid'
+}
+
+function isoForExactCalling(callingCode, preferredIso) {
+  const fallback = getCountries().includes(preferredIso) ? preferredIso : 'BR'
+  if (getCountryCallingCode(fallback) === callingCode) return fallback
+  return isoForCalling(callingCode) || fallback
+}
+
 export function suggestIso(locale, language = '') {
   const region = String(language || '').split('-')[1] || ''
   if (/^[a-zA-Z]{2}$/.test(region)) {
@@ -106,6 +123,61 @@ export function resolvePhone(digits, preferredIso = 'BR') {
     pending: false,
     display: displayPhone(iso, national),
     e164: `${calling}${national}`,
+  }
+}
+
+/** Separa o DDI digitado do número nacional quando há um separador depois do código. */
+export function splitPhoneInput(raw) {
+  const match = String(raw ?? '').match(/^\s*\+?(\d*)([\s\S]*)$/)
+  const head = match?.[1] || ''
+  const tail = match?.[2] || ''
+  if (tail && /\D/.test(tail[0])) {
+    return {
+      separated: true,
+      calling: head.slice(0, 3),
+      national: tail.replace(/\D/g, '').slice(0, 15),
+    }
+  }
+  return { separated: false, digits: (head + tail).replace(/\D/g, '').slice(0, 15) }
+}
+
+function draftPhone(iso, calling, national) {
+  const local = String(national || '').replace(/\D/g, '')
+  if (!calling && !local) return '+'
+  if (!local) return `+${calling}`
+  const formatted = new AsYouType(iso).input(local)
+  return `+${calling} ${formatted}`.trimEnd()
+}
+
+/**
+ * Lê o que foi digitado no campo.
+ * DDI válido troca o país. DDI incompleto ou inexistente mantém a última bandeira e fica pendente.
+ */
+export function readPhoneField(raw, preferredIso = 'BR') {
+  const fallback = getCountries().includes(preferredIso) ? preferredIso : 'BR'
+  const split = splitPhoneInput(raw)
+  if (!split.separated) {
+    const parsed = resolvePhone(split.digits, fallback)
+    return {
+      iso: parsed.pending ? fallback : parsed.iso,
+      digits: split.digits,
+      pending: parsed.pending,
+      display: parsed.display,
+    }
+  }
+  const calling = split.calling
+  const national = split.national.slice(0, Math.max(0, 15 - calling.length))
+  if (classifyCalling(calling) === 'exact') {
+    const iso = isoForExactCalling(calling, fallback)
+    const digits = `${calling}${national}`.slice(0, 15)
+    const parsed = resolvePhone(digits, iso)
+    return { iso: parsed.iso, digits, pending: false, display: parsed.display }
+  }
+  return {
+    iso: fallback,
+    digits: `${calling}${national}`.slice(0, 15),
+    pending: true,
+    display: draftPhone(fallback, calling, national),
   }
 }
 

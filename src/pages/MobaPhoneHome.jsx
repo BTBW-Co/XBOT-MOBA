@@ -48,7 +48,7 @@ function legalUrl(locale, page) {
 
 function initialPhone() {
   const iso = suggestIso('pt', typeof navigator !== 'undefined' ? navigator.language : '')
-  return { iso, digits: getCountryCallingCode(iso) }
+  return { iso, digits: getCountryCallingCode(iso), pending: false }
 }
 
 function PersonalAssistant({ locale }) {
@@ -177,7 +177,7 @@ export default function MobaPhoneHome() {
   async function submitPhone(event) {
     event.preventDefault()
     const resolved = resolvePhone(phoneField.digits, phoneField.iso)
-    if (resolved.pending || resolved.e164.length < 10 || resolved.e164.length > 15) {
+    if (phoneField.pending || resolved.pending || resolved.e164.length < 10 || resolved.e164.length > 15) {
       setError(copy(locale, 'phoneInvalid'))
       return
     }
