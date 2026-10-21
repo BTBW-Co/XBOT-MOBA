@@ -701,8 +701,113 @@ function injectFullscreenCss() {
       display: none !important;
     }
     body.moba-fullscreen #xbot-audio.is-recording {
-      background: #ef4444 !important;
+      background: #0d0d0d !important;
       color: #ffffff !important;
+      animation: none !important;
+      box-shadow: none !important;
+    }
+    body.moba-fullscreen .xbot-compose-inner.is-moba-recording {
+      align-items: center !important;
+    }
+    body.moba-fullscreen .xbot-compose-inner.is-moba-recording > :not(.moba-rec):not(#xbot-audio) {
+      display: none !important;
+    }
+    body.moba-fullscreen .moba-rec {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      min-height: 40px;
+      padding: 0 2px 0 0;
+    }
+    body.moba-fullscreen .moba-rec[hidden] {
+      display: none !important;
+    }
+    body.moba-fullscreen .moba-rec__cancel {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #3a3a36;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    body.moba-fullscreen .moba-rec__cancel:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    body.moba-fullscreen .moba-rec__dot {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+      animation: moba-rec-pulse 1.5s ease-out infinite;
+    }
+    body.moba-fullscreen .moba-rec__label {
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0d0d0d;
+    }
+    body.moba-fullscreen .moba-rec__time {
+      flex-shrink: 0;
+      min-width: 2.8rem;
+      font-variant-numeric: tabular-nums;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #dc2626;
+    }
+    body.moba-fullscreen .moba-rec__wave {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3px;
+      flex: 1;
+      min-width: 40px;
+      height: 22px;
+      overflow: hidden;
+    }
+    body.moba-fullscreen .moba-rec__wave span {
+      display: block;
+      flex: 0 0 3px;
+      width: 3px;
+      height: 18px;
+      border-radius: 999px;
+      background: #f87171;
+      transform: scaleY(0.35);
+      transform-origin: center;
+      animation: moba-rec-bar 1s ease-in-out infinite;
+    }
+    body.moba-fullscreen .moba-rec__wave span:nth-child(2n) { animation-duration: 0.72s; }
+    body.moba-fullscreen .moba-rec__wave span:nth-child(3n) { animation-duration: 1.15s; }
+    body.moba-fullscreen .moba-rec__wave span:nth-child(5n) { animation-duration: 0.9s; }
+    @keyframes moba-rec-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+      70% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @keyframes moba-rec-bar {
+      0%, 100% { transform: scaleY(0.28); opacity: 0.5; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+    @media (max-width: 420px) {
+      body.moba-fullscreen .moba-rec__label { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.moba-fullscreen .moba-rec__dot,
+      body.moba-fullscreen .moba-rec__wave span { animation: none; }
+      body.moba-fullscreen .moba-rec__wave span {
+        transform: scaleY(0.55);
+        opacity: 0.8;
+      }
     }
 
     body.moba-fullscreen .xbot-footer {
@@ -855,7 +960,447 @@ export function readMobaPromptQuery({ search } = {}) {
   }
 }
 
-function syncMobaPrimaryAction(input, audio, send) {
+const RECORDING_WAVE_BARS = 36
+const MOBA_REC_SEND_ICON =
+  '<svg class="moba-rec-send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>'
+const MOBA_REC_TRASH_ICON =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>'
+
+let mobaRecTimer = 0
+let mobaRecStartedAt = 0
+let mobaOwnsAudio = false
+let mobaOwnedRecorder = null
+let mobaOwnedChunks = []
+let mobaOwnedStream = null
+let mobaOwnedMime = null
+let mobaOwnedDiscard = false
+let mobaOwnedUploading = false
+let mobaAudioObserver = null
+
+function formatRecordingTime(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0)
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
+
+function mobaComposerLocale() {
+  return (
+    normalizeVisitorLocale(document.documentElement.lang) ||
+    normalizeVisitorLocale(window.__mobaDisplayLang) ||
+    'pt'
+  )
+}
+
+function installMobaRecorderBridge() {
+  if (typeof window.MediaRecorder !== 'function' || window.__mobaRecorderBridge) return
+  const Native = window.MediaRecorder
+  window.__mobaNativeMediaRecorder = Native
+  function Bridged(stream, options) {
+    const rec = options === undefined ? new Native(stream) : new Native(stream, options)
+    window.__mobaLiveRecorder = { rec, stream }
+    return rec
+  }
+  Bridged.prototype = Native.prototype
+  if (typeof Native.isTypeSupported === 'function') {
+    Bridged.isTypeSupported = (type) => Native.isTypeSupported(type)
+  }
+  window.MediaRecorder = Bridged
+  window.__mobaRecorderBridge = true
+}
+
+function ensureRecordingBar(inner) {
+  let bar = inner.querySelector('.moba-rec')
+  if (bar) return bar
+  bar = document.createElement('div')
+  bar.className = 'moba-rec'
+  bar.setAttribute('role', 'status')
+  bar.hidden = true
+  const cancel = document.createElement('button')
+  cancel.type = 'button'
+  cancel.className = 'moba-rec__cancel'
+  cancel.innerHTML = MOBA_REC_TRASH_ICON
+  cancel.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    discardMobaRecording()
+  })
+  const dot = document.createElement('span')
+  dot.className = 'moba-rec__dot'
+  dot.setAttribute('aria-hidden', 'true')
+  const label = document.createElement('span')
+  label.className = 'moba-rec__label'
+  const time = document.createElement('span')
+  time.className = 'moba-rec__time'
+  time.setAttribute('aria-hidden', 'true')
+  time.textContent = '00:00'
+  const wave = document.createElement('span')
+  wave.className = 'moba-rec__wave'
+  wave.setAttribute('aria-hidden', 'true')
+  for (let index = 0; index < RECORDING_WAVE_BARS; index += 1) {
+    const tick = document.createElement('span')
+    tick.style.animationDelay = `${index * -0.08}s`
+    wave.appendChild(tick)
+  }
+  bar.append(cancel, dot, label, time, wave)
+  const audio = inner.querySelector('#xbot-audio')
+  inner.insertBefore(bar, audio || null)
+  return bar
+}
+
+function stopRecordingClock() {
+  if (!mobaRecTimer) return
+  clearInterval(mobaRecTimer)
+  mobaRecTimer = 0
+}
+
+function startRecordingClock(time) {
+  if (mobaRecTimer) return
+  mobaRecStartedAt = Date.now()
+  if (time) time.textContent = '00:00'
+  mobaRecTimer = window.setInterval(() => {
+    const node = document.querySelector('.moba-rec__time')
+    if (!node) return
+    const elapsed = Math.floor((Date.now() - mobaRecStartedAt) / 1000)
+    node.textContent = formatRecordingTime(elapsed)
+  }, 250)
+}
+
+function syncRecordingChrome() {
+  const inner = document.querySelector('.xbot-compose-inner')
+  const audio = document.getElementById('xbot-audio')
+  if (!inner || !audio) return
+  const recording = audio.classList.contains('is-recording')
+  inner.classList.toggle('is-moba-recording', recording)
+  const bar = recording ? ensureRecordingBar(inner) : inner.querySelector('.moba-rec')
+  if (!recording) {
+    stopRecordingClock()
+    if (bar) bar.hidden = true
+    return
+  }
+  const locale = mobaComposerLocale()
+  bar.hidden = false
+  const label = bar.querySelector('.moba-rec__label')
+  const time = bar.querySelector('.moba-rec__time')
+  const cancel = bar.querySelector('.moba-rec__cancel')
+  if (label) label.textContent = tLocale(locale, 'recording')
+  if (cancel) {
+    const cancelText = tLocale(locale, 'recordingCancel')
+    cancel.title = cancelText
+    cancel.setAttribute('aria-label', cancelText)
+  }
+  const sendText = tLocale(locale, 'recordingSend')
+  audio.setAttribute('aria-label', sendText)
+  audio.title = sendText
+  if (!audio.querySelector('.moba-rec-send-icon')) audio.innerHTML = MOBA_REC_SEND_ICON
+  startRecordingClock(time)
+}
+
+function watchAudioButton(audio) {
+  if (!audio) return
+  if (mobaAudioObserver) mobaAudioObserver.disconnect()
+  mobaAudioObserver = new MutationObserver(syncRecordingChrome)
+  mobaAudioObserver.observe(audio, { attributes: true, attributeFilter: ['class'] })
+  if (!audio.dataset.mobaMicHtml && !audio.classList.contains('is-recording')) {
+    audio.dataset.mobaMicHtml = audio.innerHTML
+  }
+}
+
+function pickOwnedMime() {
+  const Native = window.__mobaNativeMediaRecorder || window.MediaRecorder
+  const fallback = { mimeType: '', filename: 'audio.webm', blobType: 'audio/webm' }
+  if (!Native || typeof Native.isTypeSupported !== 'function') return fallback
+  const candidates = [
+    { mimeType: 'audio/webm;codecs=opus', filename: 'audio.webm', blobType: 'audio/webm' },
+    { mimeType: 'audio/webm', filename: 'audio.webm', blobType: 'audio/webm' },
+    { mimeType: 'audio/mp4', filename: 'audio.m4a', blobType: 'audio/mp4' },
+    { mimeType: 'audio/ogg;codecs=opus', filename: 'audio.ogg', blobType: 'audio/ogg' },
+  ]
+  return candidates.find((item) => Native.isTypeSupported(item.mimeType)) || fallback
+}
+
+function mobaVisitorId() {
+  const cfg = window.__xbotConfig || {}
+  const ext = cfg.user && cfg.user.externalUserId != null ? String(cfg.user.externalUserId).trim() : ''
+  if (ext) {
+    const safe = ext.replace(/[^\w.@+-]/g, '_').replace(/^ext_/i, '')
+    if (safe) return `ext_${safe}`.slice(0, 50)
+  }
+  try {
+    return localStorage.getItem('xbot_visitor_id') || ''
+  } catch {
+    return ''
+  }
+}
+
+function appendOwnedAudioMessage(url) {
+  const messages = document.getElementById('xbot-messages')
+  if (!messages) return
+  const empty = document.getElementById('xbot-empty')
+  if (empty) empty.remove()
+  const row = document.createElement('div')
+  row.className = 'xbot-message-row user'
+  const col = document.createElement('div')
+  col.className = 'xbot-message-col'
+  const msg = document.createElement('div')
+  msg.className = 'xbot-message user'
+  const content = document.createElement('div')
+  content.className = 'xbot-message-content'
+  const text = document.createElement('div')
+  text.className = 'xbot-text'
+  const audio = document.createElement('audio')
+  audio.controls = true
+  audio.preload = 'metadata'
+  audio.src = url
+  audio.style.width = '220px'
+  audio.style.maxWidth = '100%'
+  text.appendChild(audio)
+  content.appendChild(text)
+  msg.appendChild(content)
+  const time = document.createElement('div')
+  time.className = 'xbot-time'
+  time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  col.append(msg, time)
+  row.appendChild(col)
+  messages.appendChild(row)
+  messages.scrollTop = messages.scrollHeight
+}
+
+function showOwnedTyping() {
+  const messages = document.getElementById('xbot-messages')
+  if (!messages || messages.querySelector('[data-moba-typing="1"]')) return
+  const el = document.createElement('div')
+  el.className = 'xbot-typing'
+  el.dataset.mobaTyping = '1'
+  el.setAttribute('aria-live', 'polite')
+  messages.appendChild(el)
+  messages.scrollTop = messages.scrollHeight
+}
+
+function clearOwnedTypingSoon() {
+  const messages = document.getElementById('xbot-messages')
+  if (!messages) return
+  const remove = () => {
+    messages.querySelectorAll('[data-moba-typing="1"]').forEach((node) => node.remove())
+  }
+  const observer = new MutationObserver(() => {
+    if (messages.querySelector('.xbot-message-row.bot')) {
+      remove()
+      observer.disconnect()
+    }
+  })
+  observer.observe(messages, { childList: true })
+  window.setTimeout(() => {
+    remove()
+    observer.disconnect()
+  }, 90000)
+}
+
+async function uploadOwnedRecording(blob, filename) {
+  const audio = document.getElementById('xbot-audio')
+  const cfg = window.__xbotConfig || {}
+  const api = String(cfg.apiBaseUrl || '').replace(/\/$/, '')
+  const url = api ? `${api}/v1/xchat/upload` : '/api/xbot/upload'
+  appendOwnedAudioMessage(URL.createObjectURL(blob))
+  showOwnedTyping()
+  clearOwnedTypingSoon()
+  const formData = new FormData()
+  formData.append('file', blob, filename || 'audio.webm')
+  if (cfg.channelId) formData.append('channel_id', cfg.channelId)
+  const visitorId = mobaVisitorId()
+  if (visitorId) formData.append('visitor_id', visitorId)
+  if (cfg.user && typeof cfg.user === 'object') {
+    try { formData.append('user', JSON.stringify(cfg.user)) } catch { /* ignore */ }
+  }
+  const context = { ...(cfg.context && typeof cfg.context === 'object' ? cfg.context : {}) }
+  if (!context.pageUrl && window.location) context.pageUrl = window.location.href
+  try { formData.append('context', JSON.stringify(context)) } catch { /* ignore */ }
+  const headers = {}
+  if (cfg.token) headers.Authorization = `Bearer ${cfg.token}`
+  try {
+    const res = await fetch(url, { method: 'POST', headers, body: formData })
+    if (!res.ok) throw new Error('upload failed')
+    const data = await res.json()
+    if (data.visitor_id) {
+      try { localStorage.setItem('xbot_visitor_id', data.visitor_id) } catch { /* ignore */ }
+    }
+    if (!data.bot_reply_enabled) {
+      document.querySelectorAll('[data-moba-typing="1"]').forEach((node) => node.remove())
+    }
+  } catch {
+    document.querySelectorAll('[data-moba-typing="1"]').forEach((node) => node.remove())
+    const messages = document.getElementById('xbot-messages')
+    if (messages) {
+      const row = document.createElement('div')
+      row.className = 'xbot-message-row bot xbot-message-row--no-avatar'
+      row.innerHTML = '<div class="xbot-message-col"><div class="xbot-message bot"><div class="xbot-message-content"><div class="xbot-text"><p>Erro ao enviar o áudio.</p></div></div></div></div>'
+      messages.appendChild(row)
+      messages.scrollTop = messages.scrollHeight
+    }
+  } finally {
+    mobaOwnedUploading = false
+    mobaOwnedRecorder = null
+    if (audio) {
+      audio.classList.remove('is-recording', 'is-uploading')
+      audio.disabled = false
+      if (audio.dataset.mobaMicHtml) audio.innerHTML = audio.dataset.mobaMicHtml
+      audio.setAttribute('aria-label', 'Gravar áudio')
+    }
+    syncRecordingChrome()
+    syncMobaPrimaryAction()
+  }
+}
+
+function finishOwnedStream() {
+  if (!mobaOwnedStream) return
+  try { mobaOwnedStream.getTracks().forEach((track) => track.stop()) } catch { /* ignore */ }
+  mobaOwnedStream = null
+}
+
+async function startOwnedRecording() {
+  const audio = document.getElementById('xbot-audio')
+  const Native = window.__mobaNativeMediaRecorder || window.MediaRecorder
+  if (!audio || !Native || !navigator.mediaDevices?.getUserMedia || mobaOwnedUploading) return
+  try {
+    mobaOwnedStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    mobaOwnedMime = pickOwnedMime()
+    const rec = mobaOwnedMime.mimeType
+      ? new Native(mobaOwnedStream, { mimeType: mobaOwnedMime.mimeType })
+      : new Native(mobaOwnedStream)
+    mobaOwnedChunks = []
+    mobaOwnedDiscard = false
+    rec.ondataavailable = (event) => {
+      if (event.data && event.data.size) mobaOwnedChunks.push(event.data)
+    }
+    rec.onstop = () => {
+      const discard = mobaOwnedDiscard
+      mobaOwnedDiscard = false
+      finishOwnedStream()
+      if (discard) {
+        mobaOwnedRecorder = null
+        audio.classList.remove('is-recording', 'is-uploading')
+        if (audio.dataset.mobaMicHtml) audio.innerHTML = audio.dataset.mobaMicHtml
+        syncRecordingChrome()
+        syncMobaPrimaryAction()
+        return
+      }
+      mobaOwnedUploading = true
+      audio.classList.remove('is-recording')
+      audio.classList.add('is-uploading')
+      syncRecordingChrome()
+      const blob = new Blob(mobaOwnedChunks, { type: (mobaOwnedMime.blobType || 'audio/webm').split(';')[0] })
+      uploadOwnedRecording(blob, mobaOwnedMime.filename || 'audio.webm')
+    }
+    rec.start(250)
+    mobaOwnedRecorder = rec
+    audio.classList.add('is-recording')
+    audio.classList.remove('is-uploading')
+    syncRecordingChrome()
+  } catch {
+    finishOwnedStream()
+    audio.classList.remove('is-recording', 'is-uploading')
+    window.alert('Erro ao iniciar gravação de áudio.')
+  }
+}
+
+function cancelOwnedRecording() {
+  if (!mobaOwnedRecorder || mobaOwnedRecorder.state === 'inactive') {
+    finishOwnedStream()
+    const audio = document.getElementById('xbot-audio')
+    if (audio) audio.classList.remove('is-recording', 'is-uploading')
+    syncRecordingChrome()
+    return
+  }
+  mobaOwnedDiscard = true
+  try { mobaOwnedRecorder.stop() } catch { /* ignore */ }
+}
+
+function onOwnedAudioClick(event) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (mobaOwnedUploading) return
+  if (mobaOwnedRecorder && mobaOwnedRecorder.state === 'recording') {
+    try { mobaOwnedRecorder.stop() } catch { /* ignore */ }
+    return
+  }
+  startOwnedRecording()
+}
+
+function takeOverAudioButton() {
+  const audio = document.getElementById('xbot-audio')
+  if (!audio || mobaOwnsAudio) return
+  const next = audio.cloneNode(true)
+  next.classList.remove('is-recording', 'is-uploading')
+  next.disabled = false
+  next.hidden = false
+  if (audio.dataset.mobaMicHtml) next.innerHTML = audio.dataset.mobaMicHtml
+  audio.replaceWith(next)
+  next.addEventListener('click', onOwnedAudioClick)
+  mobaOwnsAudio = true
+  watchAudioButton(next)
+  syncMobaPrimaryAction()
+}
+
+function discardLegacyAndTakeOver() {
+  const live = window.__mobaLiveRecorder
+  if (live?.rec) {
+    const { rec, stream } = live
+    window.__mobaLiveRecorder = null
+    rec.onstop = () => {
+      try { stream.getTracks().forEach((track) => track.stop()) } catch { /* ignore */ }
+    }
+    try {
+      if (rec.state !== 'inactive') rec.stop()
+      else stream.getTracks().forEach((track) => track.stop())
+    } catch { /* ignore */ }
+  }
+  takeOverAudioButton()
+  syncRecordingChrome()
+}
+
+function discardMobaRecording() {
+  if (mobaOwnsAudio) {
+    cancelOwnedRecording()
+    return
+  }
+  if (typeof window.__xbotDiscardRecording === 'function') {
+    window.__xbotDiscardRecording()
+    return
+  }
+  const audio = document.getElementById('xbot-audio')
+  if (audio) {
+    const event = new CustomEvent('xbot:discard-recording', { cancelable: true, bubbles: true })
+    audio.dispatchEvent(event)
+    if (event.defaultPrevented) return
+  }
+  discardLegacyAndTakeOver()
+}
+
+function bindMobaRecordingChrome() {
+  const audio = document.getElementById('xbot-audio')
+  if (!audio || audio.dataset.mobaRecBound === '1') return false
+  audio.dataset.mobaRecBound = '1'
+  installMobaRecorderBridge()
+  watchAudioButton(audio)
+  if (!window.__mobaRecKeyBound) {
+    window.__mobaRecKeyBound = true
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return
+      const current = document.getElementById('xbot-audio')
+      if (!current || !current.classList.contains('is-recording')) return
+      event.preventDefault()
+      discardMobaRecording()
+    })
+  }
+  syncRecordingChrome()
+  return true
+}
+
+function syncMobaPrimaryAction() {
+  const input = document.getElementById('xbot-input')
+  const audio = document.getElementById('xbot-audio')
+  const send = document.getElementById('xbot-send')
+  if (!input || !audio || !send) return
   const holdAudio = audio.classList.contains('is-recording') || audio.classList.contains('is-uploading')
   const hasChars = String(input.value || '').length > 0
   const showAudio = holdAudio || !hasChars
@@ -874,14 +1419,14 @@ function bindMobaComposerPrimaryAction() {
   audio.classList.remove('xbot-icon-btn')
   if (send.previousElementSibling !== audio) inner.insertBefore(audio, send)
   if (inner.lastElementChild !== send) inner.appendChild(send)
-  const sync = () => syncMobaPrimaryAction(input, audio, send)
   if (input.dataset.mobaPrimaryBound !== '1') {
     input.dataset.mobaPrimaryBound = '1'
-    input.addEventListener('input', sync)
-    const observer = new MutationObserver(sync)
-    observer.observe(audio, { attributes: true, attributeFilter: ['class'] })
+    input.addEventListener('input', syncMobaPrimaryAction)
+    const observer = new MutationObserver(syncMobaPrimaryAction)
+    observer.observe(inner, { subtree: true, attributes: true, attributeFilter: ['class'] })
   }
-  sync()
+  bindMobaRecordingChrome()
+  syncMobaPrimaryAction()
   return true
 }
 
