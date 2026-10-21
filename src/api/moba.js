@@ -95,8 +95,14 @@ async function postOnboarding(path, body) {
   return data
 }
 
-export function startPhoneChallenge({ phone, locale, objectId, pin }) {
-  return postOnboarding('phone', { phone, locale: locale || null, object_id: objectId || null, pin: pin || null })
+export function startPhoneChallenge({ phone, locale, objectId, pin, turnstileToken }) {
+  return postOnboarding('phone', {
+    phone,
+    locale: locale || null,
+    object_id: objectId || null,
+    pin: pin || null,
+    turnstile_token: turnstileToken || null,
+  })
 }
 
 export function verifyPhoneChallenge({ phone, code, objectId, pin }) {

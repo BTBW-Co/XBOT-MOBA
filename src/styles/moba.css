@@ -546,11 +546,13 @@ body.moba-has-bg .moba-boot {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  text-align: left;
 }
 
 .moba-gate-label {
   font-size: 13px;
   color: #6f6f6f;
+  text-align: center;
 }
 
 .moba-gate-row,
@@ -579,9 +581,184 @@ body.moba-has-bg .moba-boot {
   border-color: #1c1c1c;
 }
 
-.moba-gate-country {
-  width: 5.5rem;
-  text-align: center;
+.moba-phone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.moba-phone:focus-within,
+.moba-phone.is-open {
+  border-color: #1c1c1c;
+}
+
+.moba-phone-flag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #1c1c1c;
+  padding: 0 8px 0 12px;
+  height: 52px;
+  cursor: pointer;
+}
+
+.moba-phone-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.moba-phone-chevron {
+  transition: transform 0.15s ease;
+}
+
+.moba-phone.is-open .moba-phone-chevron {
+  transform: rotate(180deg);
+}
+
+.moba-phone-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 12px 4px;
+  background: #e6e6e6;
+}
+
+.moba-phone-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  color: #1c1c1c;
+  padding: 14px 12px 14px 8px;
+}
+
+.moba-phone-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(28, 28, 28, 0.12);
+  overflow: hidden;
+}
+
+.moba-phone-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+  color: #9a9a9a;
+}
+
+.moba-phone-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 15px;
+  color: #1c1c1c;
+  background: transparent;
+}
+
+.moba-phone-search input::placeholder {
+  color: #b0b0b0;
+}
+
+.moba-phone-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.moba-phone-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 15px;
+  color: #1c1c1c;
+  cursor: pointer;
+  text-align: left;
+}
+
+.moba-phone-option:hover,
+.moba-phone-option[aria-selected='true'] {
+  background: #f6f6f6;
+}
+
+.moba-phone-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.moba-phone-code {
+  color: #9a9a9a;
+}
+
+.moba-phone-empty {
+  padding: 12px 14px;
+  color: #9a9a9a;
+  font-size: 14px;
+}
+
+.moba-gate-consent {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #8a8a8a;
+}
+
+.moba-gate-consent a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.moba-turnstile {
+  width: 100%;
+}
+
+.moba-turnstile-slot {
+  width: 100%;
+  min-height: 65px;
+}
+
+.moba-turnstile-error {
+  margin: 0.65rem 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #8d8d8d;
+}
+
+.moba-turnstile-error button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: #6a6a6a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 .moba-gate-national,

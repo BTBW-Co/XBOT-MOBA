@@ -1,7 +1,11 @@
 import { readVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PhoneCountryField from '../components/PhoneCountryField'
+import TurnstileCheck from '../components/TurnstileCheck'
 import { fetchCurrentTerm, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import { getCountryCallingCode } from 'libphonenumber-js/min'
+import { resolvePhone, suggestIso } from '../lib/phoneInput'
 import {
   normalizeVisitorLocale,
   readExplicitLocale,
@@ -30,8 +34,19 @@ function errorText(locale, code) {
   if (code === 'invalid_profile') return copy(locale, 'profileInvalid')
   if (code === 'email_in_use') return copy(locale, 'emailInUse')
   if (code === 'terms_required') return copy(locale, 'termsRequired')
+  if (code === 'turnstile_failed' || code === 'turnstile_required') return copy(locale, 'humanCheckFailed')
   if (code && !String(code).startsWith('HTTP ')) return code
   return ''
+}
+
+function legalUrl(locale, page) {
+  const code = ['pt', 'en', 'es', 'zh'].includes(locale) ? locale : 'pt'
+  return `https://xbotone.com/${code}/${page}`
+}
+
+function initialPhone() {
+  const iso = suggestIso('pt', typeof navigator !== 'undefined' ? navigator.language : '')
+  return { iso, digits: getCountryCallingCode(iso) }
 }
 
 export default function MobaPhoneHome() {
@@ -42,8 +57,8 @@ export default function MobaPhoneHome() {
   const [locale, setLocale] = useState('pt')
   const [ready, setReady] = useState(false)
   const [phase, setPhase] = useState('phone')
-  const [country, setCountry] = useState('55')
-  const [national, setNational] = useState('')
+  const [phoneField, setPhoneField] = useState(initialPhone)
+  const [turnstileToken, setTurnstileToken] = useState('')
   const [phone, setPhone] = useState('')
   const [digits, setDigits] = useState(() => Array(CODE_LENGTH).fill(''))
   const [error, setError] = useState('')
@@ -51,7 +66,7 @@ export default function MobaPhoneHome() {
   const [visitor, setVisitor] = useState(null)
   const [term, setTerm] = useState(null)
   const [acceptTerms, setAcceptTerms] = useState(false)
-  const [profile, setProfile] = useState({ name: '', email: '', company: '', password: '' })
+  const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '', company: '', password: '' })
   const codeRefs = useRef([])
 
   useEffect(() => {
@@ -71,11 +86,11 @@ export default function MobaPhoneHome() {
     navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
   }
 
-  async function sendCode(nextPhone) {
+  async function sendCode(nextPhone, token = turnstileToken) {
     setLoading(true)
     setError('')
     try {
-      await startPhoneChallenge({ phone: nextPhone, locale, objectId: objectRef, pin })
+      await startPhoneChallenge({ phone: nextPhone, locale, objectId: objectRef, pin, turnstileToken: token })
       setPhone(nextPhone)
       setDigits(Array(CODE_LENGTH).fill(''))
       setPhase('code')
@@ -88,12 +103,16 @@ export default function MobaPhoneHome() {
 
   async function submitPhone(event) {
     event.preventDefault()
-    const next = `${country}${national}`.replace(/\D/g, '')
-    if (next.length < 10 || next.length > 15) {
+    const resolved = resolvePhone(phoneField.digits, phoneField.iso)
+    if (resolved.pending || resolved.e164.length < 10 || resolved.e164.length > 15) {
       setError(copy(locale, 'phoneInvalid'))
       return
     }
-    await sendCode(next)
+    if (!turnstileToken) {
+      setError(copy(locale, 'humanRequired'))
+      return
+    }
+    await sendCode(resolved.e164, turnstileToken)
   }
 
   async function submitCode(code) {
@@ -124,10 +143,11 @@ export default function MobaPhoneHome() {
 
   async function submitProfile(event) {
     event.preventDefault()
-    const name = profile.name.trim()
+    const givenName = profile.givenName.trim()
+    const familyName = profile.familyName.trim()
     const email = profile.email.trim()
     const company = profile.company.trim()
-    if (name.length < 2 || !email.includes('@') || company.length < 2 || profile.password.length < 8) {
+    if (givenName.length < 2 || familyName.length < 2 || !profile.gender || !email.includes('@') || company.length < 2 || profile.password.length < 8) {
       setError(copy(locale, 'profileInvalid'))
       return
     }
@@ -140,7 +160,9 @@ export default function MobaPhoneHome() {
     try {
       await savePhoneProfile({
         visitor_id: visitor.visitor_id,
-        name,
+        given_name: givenName,
+        family_name: familyName,
+        gender: profile.gender,
         email,
         company_name: company,
         password: profile.password,
@@ -149,7 +171,7 @@ export default function MobaPhoneHome() {
         object_id: objectRef,
         pin: pin || null,
       })
-      enterConversation({ ...visitor, name, email, phone: visitor.phone || phone })
+      enterConversation({ ...visitor, name: `${givenName} ${familyName}`.trim(), email, phone: visitor.phone || phone })
     } catch (err) {
       setError(errorText(locale, err?.detail) || copy(locale, 'profileInvalid'))
     } finally {
@@ -204,29 +226,40 @@ export default function MobaPhoneHome() {
             <label className="moba-gate-label" htmlFor="moba-national">
               {copy(locale, 'phoneLabel')}
             </label>
-            <div className="moba-gate-row">
-              <input
-                className="moba-gate-input moba-gate-country"
-                aria-label={copy(locale, 'countryCode')}
-                inputMode="numeric"
-                autoComplete="tel-country-code"
-                value={`+${country}`}
-                onChange={(event) => setCountry(event.target.value.replace(/\D/g, '').slice(0, 3))}
-              />
-              <input
-                id="moba-national"
-                className="moba-gate-input moba-gate-national"
-                inputMode="tel"
-                autoComplete="tel-national"
-                autoFocus
-                value={national}
-                placeholder={copy(locale, 'phonePlaceholder')}
-                onChange={(event) => setNational(event.target.value.replace(/[^\d\s()-]/g, ''))}
-              />
-            </div>
+            <PhoneCountryField
+              locale={locale}
+              digits={phoneField.digits}
+              iso={phoneField.iso}
+              autoFocus
+              searchLabel={copy(locale, 'countrySearch')}
+              emptyLabel={copy(locale, 'countryEmpty')}
+              onChange={setPhoneField}
+            />
+            <p className="moba-gate-consent">
+              {copy(locale, 'phoneConsentLead', { action: copy(locale, 'phoneSend') })}
+              <a href={legalUrl(locale, 'terms')} target="_blank" rel="noreferrer">
+                {copy(locale, 'phoneTerms')}
+              </a>
+              {copy(locale, 'phoneConsentMid')}
+              <a href={legalUrl(locale, 'terms')} target="_blank" rel="noreferrer">
+                {copy(locale, 'phoneSms')}
+              </a>
+              {copy(locale, 'phoneConsentAnd')}
+              <a href={legalUrl(locale, 'privacy')} target="_blank" rel="noreferrer">
+                {copy(locale, 'phonePrivacy')}
+              </a>
+              {copy(locale, 'phoneConsentEnd')}
+            </p>
+            <TurnstileCheck
+              locale={locale}
+              failedMessage={copy(locale, 'humanCheckFailed')}
+              retryLabel={copy(locale, 'humanRetry')}
+              onToken={setTurnstileToken}
+            />
             {error ? <p className="moba-gate-error">{error}</p> : null}
-            <button className="moba-gate-submit" type="submit" disabled={loading}>
+            <button className="moba-gate-submit" type="submit" disabled={loading || !turnstileToken}>
               {loading ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
+              {loading ? null : <span aria-hidden="true"> →</span>}
             </button>
           </form>
         ) : phase === 'code' ? (
@@ -286,15 +319,36 @@ export default function MobaPhoneHome() {
           </form>
         ) : (
           <form className="moba-gate-form" onSubmit={submitProfile}>
-            <label className="moba-gate-label" htmlFor="moba-name">{copy(locale, 'profileName')}</label>
+            <label className="moba-gate-label" htmlFor="moba-given">{copy(locale, 'profileGiven')}</label>
             <input
-              id="moba-name"
+              id="moba-given"
               className="moba-gate-input moba-gate-field"
-              autoComplete="name"
+              autoComplete="given-name"
               autoFocus
-              value={profile.name}
-              onChange={(event) => setProfile({ ...profile, name: event.target.value })}
+              value={profile.givenName}
+              onChange={(event) => setProfile({ ...profile, givenName: event.target.value })}
             />
+            <label className="moba-gate-label" htmlFor="moba-family">{copy(locale, 'profileFamily')}</label>
+            <input
+              id="moba-family"
+              className="moba-gate-input moba-gate-field"
+              autoComplete="family-name"
+              value={profile.familyName}
+              onChange={(event) => setProfile({ ...profile, familyName: event.target.value })}
+            />
+            <label className="moba-gate-label" htmlFor="moba-gender">{copy(locale, 'profileGender')}</label>
+            <select
+              id="moba-gender"
+              className="moba-gate-input moba-gate-field"
+              value={profile.gender}
+              onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
+            >
+              <option value="">{copy(locale, 'profileGender')}</option>
+              <option value="female">{copy(locale, 'genderFemale')}</option>
+              <option value="male">{copy(locale, 'genderMale')}</option>
+              <option value="other">{copy(locale, 'genderOther')}</option>
+              <option value="undisclosed">{copy(locale, 'genderUndisclosed')}</option>
+            </select>
             <label className="moba-gate-label" htmlFor="moba-email">{copy(locale, 'profileEmail')}</label>
             <input
               id="moba-email"
