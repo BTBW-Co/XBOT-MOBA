@@ -107,7 +107,7 @@ export default function MobaPhoneHome() {
   const [visitor, setVisitor] = useState(null)
   const [term, setTerm] = useState(null)
   const [acceptTerms, setAcceptTerms] = useState(false)
-  const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '', company: '', password: '' })
+  const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '' })
   const [invite, setInvite] = useState(null)
   const codeRefs = useRef([])
 
@@ -224,8 +224,7 @@ export default function MobaPhoneHome() {
     const givenName = profile.givenName.trim()
     const familyName = profile.familyName.trim()
     const email = profile.email.trim()
-    const company = profile.company.trim()
-    if (givenName.length < 2 || familyName.length < 2 || !profile.gender || !email.includes('@') || company.length < 2 || profile.password.length < 8) {
+    if (givenName.length < 2 || familyName.length < 2 || !profile.gender || !email.includes('@')) {
       setError(copy(locale, 'profileInvalid'))
       return
     }
@@ -242,8 +241,6 @@ export default function MobaPhoneHome() {
         family_name: familyName,
         gender: profile.gender,
         email,
-        company_name: company,
-        password: profile.password,
         accept_terms_id: term?.id || null,
         locale,
         object_id: explicitObject || null,
@@ -453,23 +450,6 @@ export default function MobaPhoneHome() {
               autoComplete="email"
               value={profile.email}
               onChange={(event) => setProfile({ ...profile, email: event.target.value })}
-            />
-            <label className="moba-gate-label" htmlFor="moba-company">{copy(locale, 'profileCompany')}</label>
-            <input
-              id="moba-company"
-              className="moba-gate-input moba-gate-field"
-              autoComplete="organization"
-              value={profile.company}
-              onChange={(event) => setProfile({ ...profile, company: event.target.value })}
-            />
-            <label className="moba-gate-label" htmlFor="moba-password">{copy(locale, 'profilePassword')}</label>
-            <input
-              id="moba-password"
-              className="moba-gate-input moba-gate-field"
-              type="password"
-              autoComplete="new-password"
-              value={profile.password}
-              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
             />
             {term?.id ? (
               <label className="moba-gate-check">
