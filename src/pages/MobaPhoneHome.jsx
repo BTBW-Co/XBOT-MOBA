@@ -1,7 +1,7 @@
 import { readVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import { fetchCurrentTerm, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
 import {
   normalizeVisitorLocale,
   readExplicitLocale,
@@ -27,6 +27,10 @@ function errorText(locale, code) {
   if (code === 'send_failed') return copy(locale, 'phoneSendFailed')
   if (code === 'expired') return copy(locale, 'codeExpired')
   if (code === 'invalid_code') return copy(locale, 'codeInvalid')
+  if (code === 'invalid_profile') return copy(locale, 'profileInvalid')
+  if (code === 'email_in_use') return copy(locale, 'emailInUse')
+  if (code === 'terms_required') return copy(locale, 'termsRequired')
+  if (code && !String(code).startsWith('HTTP ')) return code
   return ''
 }
 
@@ -44,6 +48,10 @@ export default function MobaPhoneHome() {
   const [digits, setDigits] = useState(() => Array(CODE_LENGTH).fill(''))
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [visitor, setVisitor] = useState(null)
+  const [term, setTerm] = useState(null)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [profile, setProfile] = useState({ name: '', email: '', company: '', password: '' })
   const codeRefs = useRef([])
 
   useEffect(() => {
@@ -99,10 +107,51 @@ export default function MobaPhoneHome() {
         setError(copy(locale, 'phoneUnknown'))
         return
       }
+      if (data.needs_profile) {
+        setVisitor(data)
+        setPhase('profile')
+        fetchCurrentTerm().then((current) => setTerm(current)).catch(() => setTerm(null))
+        return
+      }
       enterConversation(data)
     } catch (err) {
       setDigits(Array(CODE_LENGTH).fill(''))
       setError(errorText(locale, err?.detail) || copy(locale, 'codeInvalid'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function submitProfile(event) {
+    event.preventDefault()
+    const name = profile.name.trim()
+    const email = profile.email.trim()
+    const company = profile.company.trim()
+    if (name.length < 2 || !email.includes('@') || company.length < 2 || profile.password.length < 8) {
+      setError(copy(locale, 'profileInvalid'))
+      return
+    }
+    if (term?.id && !acceptTerms) {
+      setError(copy(locale, 'termsRequired'))
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      await savePhoneProfile({
+        visitor_id: visitor.visitor_id,
+        name,
+        email,
+        company_name: company,
+        password: profile.password,
+        accept_terms_id: term?.id || null,
+        locale,
+        object_id: objectRef,
+        pin: pin || null,
+      })
+      enterConversation(visitor)
+    } catch (err) {
+      setError(errorText(locale, err?.detail) || copy(locale, 'profileInvalid'))
     } finally {
       setLoading(false)
     }
@@ -134,9 +183,14 @@ export default function MobaPhoneHome() {
     return <div className="moba-gate" />
   }
 
-  const title = phase === 'phone' ? copy(locale, 'phoneTitle') : copy(locale, 'codeTitle')
+  const title =
+    phase === 'phone' ? copy(locale, 'phoneTitle') : phase === 'code' ? copy(locale, 'codeTitle') : copy(locale, 'profileTitle')
   const subtitle =
-    phase === 'phone' ? copy(locale, 'phoneSubtitle') : copy(locale, 'codeSubtitle', { phone })
+    phase === 'phone'
+      ? copy(locale, 'phoneSubtitle')
+      : phase === 'code'
+        ? copy(locale, 'codeSubtitle', { phone })
+        : copy(locale, 'profileSubtitle')
 
   return (
     <div className="moba-gate">
@@ -175,7 +229,7 @@ export default function MobaPhoneHome() {
               {loading ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
             </button>
           </form>
-        ) : (
+        ) : phase === 'code' ? (
           <form
             className="moba-gate-form"
             onSubmit={(event) => {
@@ -229,6 +283,54 @@ export default function MobaPhoneHome() {
                 {copy(locale, 'resendCode')}
               </button>
             </div>
+          </form>
+        ) : (
+          <form className="moba-gate-form" onSubmit={submitProfile}>
+            <label className="moba-gate-label" htmlFor="moba-name">{copy(locale, 'profileName')}</label>
+            <input
+              id="moba-name"
+              className="moba-gate-input moba-gate-field"
+              autoComplete="name"
+              autoFocus
+              value={profile.name}
+              onChange={(event) => setProfile({ ...profile, name: event.target.value })}
+            />
+            <label className="moba-gate-label" htmlFor="moba-email">{copy(locale, 'profileEmail')}</label>
+            <input
+              id="moba-email"
+              className="moba-gate-input moba-gate-field"
+              type="email"
+              autoComplete="email"
+              value={profile.email}
+              onChange={(event) => setProfile({ ...profile, email: event.target.value })}
+            />
+            <label className="moba-gate-label" htmlFor="moba-company">{copy(locale, 'profileCompany')}</label>
+            <input
+              id="moba-company"
+              className="moba-gate-input moba-gate-field"
+              autoComplete="organization"
+              value={profile.company}
+              onChange={(event) => setProfile({ ...profile, company: event.target.value })}
+            />
+            <label className="moba-gate-label" htmlFor="moba-password">{copy(locale, 'profilePassword')}</label>
+            <input
+              id="moba-password"
+              className="moba-gate-input moba-gate-field"
+              type="password"
+              autoComplete="new-password"
+              value={profile.password}
+              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
+            />
+            {term?.id ? (
+              <label className="moba-gate-check">
+                <input type="checkbox" checked={acceptTerms} onChange={(event) => setAcceptTerms(event.target.checked)} />
+                <span>{copy(locale, 'profileTerms')}</span>
+              </label>
+            ) : null}
+            {error ? <p className="moba-gate-error">{error}</p> : null}
+            <button className="moba-gate-submit" type="submit" disabled={loading}>
+              {loading ? copy(locale, 'profileSaving') : copy(locale, 'profileSave')}
+            </button>
           </form>
         )}
       </main>

@@ -584,10 +584,21 @@ body.moba-has-bg .moba-boot {
   text-align: center;
 }
 
-.moba-gate-national {
+.moba-gate-national,
+.moba-gate-field {
   flex: 1;
   min-width: 0;
+  width: 100%;
   text-align: left;
+}
+
+.moba-gate-check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  text-align: left;
+  font-size: 13px;
+  color: #6f6f6f;
 }
 
 .moba-gate-digit {

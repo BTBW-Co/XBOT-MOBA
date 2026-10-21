@@ -2,11 +2,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readVisitorIdentity, storeVisitorIdentity, installVisitorIdentityExpiry } from './mobaVisitorIdentity.js'
 const values = new Map()
-globalThis.sessionStorage = {
+const memoryStorage = {
   getItem: key => values.get(key) || null,
   setItem: (key, value) => values.set(key, value),
   removeItem: key => values.delete(key),
 }
+globalThis.sessionStorage = memoryStorage
+globalThis.localStorage = memoryStorage
 
 test('verified identity survives navigation and expires', () => {
   values.clear()

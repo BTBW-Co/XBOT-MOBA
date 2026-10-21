@@ -102,3 +102,14 @@ export function startPhoneChallenge({ phone, locale, objectId, pin }) {
 export function verifyPhoneChallenge({ phone, code, objectId, pin }) {
   return postOnboarding('phone/verify', { phone, code, object_id: objectId || null, pin: pin || null })
 }
+
+export function savePhoneProfile(body) {
+  return postOnboarding('phone/profile', body)
+}
+
+export async function fetchCurrentTerm() {
+  const api = getApiBaseUrl()
+  const res = await fetch(`${api}/v1/terms/current`, { headers: { Accept: 'application/json' } })
+  if (!res.ok) return null
+  return res.json()
+}
