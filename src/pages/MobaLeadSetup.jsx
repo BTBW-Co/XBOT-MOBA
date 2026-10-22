@@ -3,9 +3,13 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { completeLeadConnect, fetchLeadSetup, startLeadConnect } from '../api/moba'
 import { storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 
-const COPY = {
-  googlecalendar: 'Agenda',
-  gmail: 'E-mail',
+const ICONS = {
+  gmail: '/icons/gmail.svg',
+  googledrive: '/icons/google-drive.svg',
+  exist: '/icons/health.svg',
+  github: '/icons/github.svg',
+  googlecalendar: '/icons/google-calendar.svg',
+  outlook: '/icons/outlook.svg',
 }
 
 export default function MobaLeadSetup({ token: tokenProp, onClose }) {
@@ -25,6 +29,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
       try {
         const data = await fetchLeadSetup(token)
         if (cancelled) return
+        setError('')
         setView(data)
         if (data?.session?.visitor_id && data.session.expires_in) {
           storeVisitorIdentity(data.session, 'personal')
@@ -82,34 +87,58 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
     <main className="moba-setup">
       <p className="moba-setup-kicker">Conta deste telefone</p>
       <h1>{view?.name ? `${view.name}, ligue a conta` : 'Ligue a conta'}</h1>
-      <p className="moba-setup-lead">
-        E-mail e agenda ficam nesta pessoa. Não entram na workspace.
-      </p>
+      <p className="moba-setup-lead">Estas contas ficam nesta pessoa. Não entram na workspace.</p>
       {error ? <p className="moba-setup-error">{error}</p> : null}
       {notice ? <p className="moba-setup-notice">{notice}</p> : null}
-      <ul className="moba-setup-list">
-        {(view?.tools || []).map((tool) => {
-          const linked = tool.status === 'connected'
-          return (
-            <li key={tool.toolkit} className={tool.requested ? 'is-requested' : ''}>
-              <div>
-                <strong>{COPY[tool.toolkit] || tool.label}</strong>
-                <span>{linked ? tool.account || 'Conectada' : 'Ainda não ligada'}</span>
-              </div>
+      <section className="moba-setup-section" aria-labelledby="moba-setup-heading">
+        <h2 id="moba-setup-heading">Contas</h2>
+        <div className="moba-setup-grid">
+          {(view?.tools || []).map((tool) => {
+            const linked = tool.status === 'connected'
+            const label = tool.label
+            return (
               <button
+                key={tool.toolkit}
                 type="button"
+                className={`moba-setup-card${tool.requested ? ' is-requested' : ''}`}
                 disabled={linked || busy === tool.toolkit}
+                aria-label={linked ? `${label} conectado` : `Conectar ${label}`}
                 onClick={() => connect(tool.toolkit)}
               >
-                {linked ? 'Conectada' : busy === tool.toolkit ? 'Abrindo…' : 'Conectar'}
+                <span className="moba-setup-icon">
+                  <img src={ICONS[tool.toolkit]} alt="" />
+                </span>
+                <span className="moba-setup-copy">
+                  <strong>{label}</strong>
+                  <span>{tool.description}</span>
+                </span>
+                <span className="moba-setup-action" aria-hidden="true">
+                  {linked ? <CheckIcon /> : <PlusIcon />}
+                </span>
               </button>
-            </li>
-          )
-        })}
-      </ul>
+            )
+          })}
+        </div>
+      </section>
       <button type="button" className="moba-setup-back" onClick={goBack}>
         Voltar à conversa
       </button>
     </main>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4.5 10.5 8.2 14 15.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }

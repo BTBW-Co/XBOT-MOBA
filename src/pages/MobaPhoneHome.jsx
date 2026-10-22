@@ -174,7 +174,7 @@ export default function MobaPhoneHome() {
     setChannelNote('')
     try {
       const identity = visitor?.visitor_id ? visitor : readVisitorIdentity()
-      await choosePersonalChannel({
+      const result = await choosePersonalChannel({
         visitorId: identity?.visitor_id,
         channel: 'whatsapp',
         objectId: explicitObject || null,
@@ -182,6 +182,7 @@ export default function MobaPhoneHome() {
       })
       sessionStorage.removeItem(CHANNEL_PENDING)
       setChannelNote(copy(locale, 'channelWhatsappSent'))
+      if (result?.whatsapp_url) window.location.assign(result.whatsapp_url)
     } catch (err) {
       setError(errorText(locale, err?.detail) || copy(locale, 'channelSendFailed'))
     } finally {

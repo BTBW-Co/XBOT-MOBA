@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true">
+  <defs>
+    <clipPath id="xbot-gcal-clip">
+      <rect width="48" height="48" rx="11"/>
+    </clipPath>
+    <mask id="xbot-gcal-fold">
+      <rect width="48" height="48" fill="#fff"/>
+      <polygon points="40,48 48,40 48,48" fill="#000"/>
+    </mask>
+  </defs>
+  <g clip-path="url(#xbot-gcal-clip)" mask="url(#xbot-gcal-fold)">
+    <rect width="48" height="48" fill="#4285F4"/>
+    <rect x="33" width="15" height="13" fill="#1967D2"/>
+    <rect x="33" y="13" width="15" height="21" fill="#FBBC04"/>
+    <rect y="34" width="48" height="14" fill="#34A853"/>
+    <rect y="34" width="15" height="14" fill="#188038"/>
+    <polygon fill="#EA4335" points="32,34 48,34 32,48"/>
+    <rect x="8" y="9" width="26" height="24" fill="#fff"/>
+    <text x="21" y="27" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#1A73E8">31</text>
+  </g>
+</svg>
