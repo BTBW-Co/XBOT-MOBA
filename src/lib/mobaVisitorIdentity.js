@@ -43,6 +43,11 @@ export function rememberVisitorProfile(patch) {
       const value = String(patch?.[key] || '').trim()
       if (value) next[key] = value
     })
+    if (Object.prototype.hasOwnProperty.call(patch || {}, 'invite_url')) {
+      const invite = String(patch.invite_url || '').trim()
+      if (invite) next.invite_url = invite
+      else delete next.invite_url
+    }
     writeStored(JSON.stringify(next))
     return next
   } catch {

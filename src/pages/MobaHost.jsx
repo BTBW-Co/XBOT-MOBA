@@ -41,6 +41,7 @@ const RESERVED_PATHS = new Set([
   'manifest.webmanifest',
   'sw.js',
   'service-worker.js',
+  'icons',
   'vite.svg',
   'health',
   'api',

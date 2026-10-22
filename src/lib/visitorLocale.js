@@ -104,6 +104,9 @@ const COPY = {
     channelImessageSoon: 'iMessage entra logo. Até lá, esta conversa é a mesma no MOBA e no WhatsApp do XBot.',
     channelLineDown: 'O WhatsApp do XBot ainda não está conectado.',
     channelSendFailed: 'Não consegui chamar no WhatsApp do XBot. Pode continuar por aqui.',
+    shareInvite: 'Compartilhar convite',
+    inviteCopy: 'Copiar link',
+    inviteCopied: 'Link copiado',
   },
   en: {
     langLabel: 'Language',
@@ -189,6 +192,9 @@ const COPY = {
     channelImessageSoon: 'iMessage is next. Until then, this conversation is the same on MOBA and on XBot WhatsApp.',
     channelLineDown: 'XBot WhatsApp is not connected yet.',
     channelSendFailed: 'I could not reach you on XBot WhatsApp. You can continue here.',
+    shareInvite: 'Share invite',
+    inviteCopy: 'Copy link',
+    inviteCopied: 'Link copied',
   },
   es: {
     langLabel: 'Idioma',
@@ -274,6 +280,9 @@ const COPY = {
     channelImessageSoon: 'iMessage llega pronto. Hasta entonces, esta conversación es la misma en MOBA y en el WhatsApp de XBot.',
     channelLineDown: 'El WhatsApp de XBot todavía no está conectado.',
     channelSendFailed: 'No pude llamarte por el WhatsApp de XBot. Puedes seguir aquí.',
+    shareInvite: 'Compartir invitación',
+    inviteCopy: 'Copiar enlace',
+    inviteCopied: 'Enlace copiado',
   },
   zh: {
     langLabel: '语言',
@@ -359,6 +368,9 @@ const COPY = {
     channelImessageSoon: 'iMessage 即将开放。在那之前，MOBA 和 XBot 的 WhatsApp 是同一段对话。',
     channelLineDown: 'XBot 的 WhatsApp 还没有接通。',
     channelSendFailed: '没能在 XBot 的 WhatsApp 上联系到你。可以在这里继续。',
+    shareInvite: '分享邀请',
+    inviteCopy: '复制链接',
+    inviteCopied: '已复制',
   },
 }
 

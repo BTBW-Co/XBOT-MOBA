@@ -124,6 +124,8 @@ function injectFullscreenCss() {
 
     /* Header flutuante (inset + cantos arredondados) */
     body.moba-fullscreen .xbot-header {
+      position: relative !important;
+      overflow: visible !important;
       width: auto !important;
       max-width: none !important;
       align-self: stretch !important;
@@ -222,13 +224,77 @@ function injectFullscreenCss() {
       cursor: pointer;
     }
     body.moba-fullscreen .moba-operator {
+      position: relative;
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       margin-left: auto;
-      max-width: 42%;
+      max-width: 56%;
       min-width: 0;
+    }
+    body.moba-fullscreen .moba-invite-share {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #1c1c1c;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    body.moba-fullscreen .moba-invite-share:hover,
+    body.moba-fullscreen .moba-invite-share[aria-expanded="true"] {
+      background: #f3f1ee;
+    }
+    body.moba-fullscreen .moba-invite-popover {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      z-index: 30;
+      width: min(320px, calc(100vw - 32px));
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: #ffffff;
+      border: 1px solid #e6e2dc;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(22, 22, 20, 0.12);
+    }
+    body.moba-fullscreen .moba-invite-popover[hidden] {
+      display: none !important;
+    }
+    body.moba-fullscreen .moba-invite-title {
+      margin: 0;
+      font: 600 13px/1.2 "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      color: #161614;
+    }
+    body.moba-fullscreen .moba-invite-url {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      border: 1px solid #e6e2dc;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #faf9f7;
+      color: #1c1c1c;
+      font: 500 13px/1.3 "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    }
+    body.moba-fullscreen .moba-invite-copy {
+      border: 0;
+      border-radius: 10px;
+      background: #161614;
+      color: #ffffff;
+      font: 600 13px/1 "DM Sans", ui-sans-serif, system-ui, sans-serif;
+      padding: 10px 12px;
+      cursor: pointer;
     }
     body.moba-fullscreen .moba-operator-avatar {
       width: 28px;
@@ -1600,8 +1666,129 @@ function avatarInitial(label) {
   return (match ? match[0] : String(label || '?').slice(0, 1)).toUpperCase()
 }
 
+const SHARE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98"/><path d="M15.41 6.51l-6.82 3.98"/></svg>'
+
+function readInviteUrl(identity) {
+  try {
+    const url = new URL(String(identity?.invite_url || '').trim())
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return ''
+    const parts = url.pathname.split('/').filter(Boolean)
+    if (parts.length === 2 && parts[0] === 'invite' && /^[A-Za-z0-9]{4,12}$/.test(parts[1])) {
+      return url.toString()
+    }
+  } catch {
+    /* endereço ausente ou inválido */
+  }
+  return ''
+}
+
+function bindInviteDismiss() {
+  if (window.__mobaInviteDismiss) return
+  window.__mobaInviteDismiss = true
+  const close = () => {
+    document.querySelectorAll('.moba-invite-popover').forEach((node) => node.setAttribute('hidden', ''))
+    document.querySelectorAll('.moba-invite-share').forEach((node) => node.setAttribute('aria-expanded', 'false'))
+  }
+  document.addEventListener('click', close)
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') close()
+  })
+}
+
+async function copyInviteUrl(url) {
+  try {
+    await navigator.clipboard.writeText(url)
+    return true
+  } catch {
+    try {
+      const field = document.querySelector('.moba-invite-popover:not([hidden]) .moba-invite-url')
+      field?.focus()
+      field?.select()
+      return document.execCommand('copy')
+    } catch {
+      return false
+    }
+  }
+}
+
+/** Ícone à esquerda do nome. O popover copia o link /invite/{código}. */
+function renderInviteShare(chip, nameEl, inviteUrl, locale) {
+  const url = readInviteUrl({ invite_url: inviteUrl })
+  const anchor = chip.closest('.xbot-header') || chip
+  let button = chip.querySelector('.moba-invite-share')
+  let popover = anchor.querySelector('.moba-invite-popover')
+  if (!url) {
+    button?.remove()
+    popover?.remove()
+    return
+  }
+  if (!button) {
+    button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'moba-invite-share'
+    button.innerHTML = SHARE_ICON
+    button.setAttribute('aria-haspopup', 'dialog')
+    button.setAttribute('aria-expanded', 'false')
+    nameEl.before(button)
+    popover = document.createElement('div')
+    popover.className = 'moba-invite-popover'
+    popover.setAttribute('hidden', '')
+    popover.setAttribute('role', 'dialog')
+    const title = document.createElement('p')
+    title.className = 'moba-invite-title'
+    const field = document.createElement('input')
+    field.className = 'moba-invite-url'
+    field.readOnly = true
+    field.spellcheck = false
+    const copy = document.createElement('button')
+    copy.type = 'button'
+    copy.className = 'moba-invite-copy'
+    popover.append(title, field, copy)
+    anchor.appendChild(popover)
+    bindInviteDismiss()
+    button.addEventListener('click', (event) => {
+      event.stopPropagation()
+      const opening = popover.hasAttribute('hidden')
+      document.querySelectorAll('.moba-invite-popover').forEach((node) => node.setAttribute('hidden', ''))
+      document.querySelectorAll('.moba-invite-share').forEach((node) => node.setAttribute('aria-expanded', 'false'))
+      if (!opening) return
+      popover.removeAttribute('hidden')
+      button.setAttribute('aria-expanded', 'true')
+      field.focus()
+      field.select()
+    })
+    popover.addEventListener('click', (event) => event.stopPropagation())
+    copy.addEventListener('click', async () => {
+      const copied = await copyInviteUrl(button.dataset.url || '')
+      if (!copied) return
+      copy.textContent = tLocale(locale, 'inviteCopied')
+      window.setTimeout(() => {
+        copy.textContent = copy.dataset.label || tLocale(locale, 'inviteCopy')
+      }, 1600)
+    })
+  }
+  const label = tLocale(locale, 'shareInvite')
+  button.dataset.url = url
+  button.setAttribute('aria-label', label)
+  if (!popover) return
+  const title = popover.querySelector('.moba-invite-title')
+  const field = popover.querySelector('.moba-invite-url')
+  const copy = popover.querySelector('.moba-invite-copy')
+  if (title) title.textContent = label
+  if (field && field.value !== url) field.value = url
+  if (popover.id) button.setAttribute('aria-controls', popover.id)
+  else {
+    popover.id = 'moba-invite-popover'
+    button.setAttribute('aria-controls', popover.id)
+  }
+  if (copy) {
+    copy.dataset.label = tLocale(locale, 'inviteCopy')
+    if (copy.textContent !== tLocale(locale, 'inviteCopied')) copy.textContent = copy.dataset.label
+  }
+}
+
 /** Pessoa identificada no canto direito do header: conta de operador ou visitante do SMS. */
-function renderOperatorAccount(visitorIdentity) {
+function renderOperatorAccount(visitorIdentity, locale = 'pt') {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
   if (!header) return false
   const profile = readOperatorProfile()
@@ -1624,6 +1811,7 @@ function renderOperatorAccount(visitorIdentity) {
   const name = chip.querySelector('.moba-operator-name')
   if (avatar) avatar.textContent = avatarInitial(label)
   if (name && name.textContent !== label) name.textContent = label
+  if (name) renderInviteShare(chip, name, visitorIdentity?.invite_url, locale)
   return true
 }
 
@@ -1655,7 +1843,7 @@ function ensureHeaderChrome({
     renderHeaderName(headerName) &&
     renderHeaderIdentity(headerRole) &&
     renderLocaleSwitch(locale, { enabled: showLocale }) &&
-    renderOperatorAccount(visitorIdentity)
+    renderOperatorAccount(visitorIdentity, locale)
   if (paint()) return
   let left = attempts
   const timer = setInterval(() => {
@@ -1704,6 +1892,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
           name: session.name,
           email: session.email,
           phone: session.phone,
+          invite_url: session.invite_url || '',
         }) || visitorIdentity
       }
     } catch {
@@ -1813,4 +2002,35 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
       ensureHeaderChrome(headerChrome)
     }, ms)
   })
+}
+
+if (import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === 'invite') {
+  window.setTimeout(() => {
+    injectFullscreenCss()
+    document.documentElement.classList.add('moba-fullscreen')
+    document.body.classList.add('moba-fullscreen', 'moba-xchat-live')
+    const box = document.createElement('div')
+    box.className = 'xbot-chatbox is-open is-visible'
+    const header = document.createElement('header')
+    header.className = 'xbot-header'
+    header.style.display = 'flex'
+    header.style.alignItems = 'center'
+    const text = document.createElement('div')
+    text.className = 'xbot-header-text'
+    const bot = document.createElement('div')
+    bot.className = 'xbot-header-name'
+    bot.textContent = 'Xbot'
+    const role = document.createElement('div')
+    role.className = 'xbot-header-role'
+    role.textContent = 'Assistente pessoal'
+    text.append(bot, role)
+    header.append(text)
+    box.append(header)
+    document.body.append(box)
+    renderOperatorAccount({
+      name: 'Ana Souza',
+      email: 'ana@example.com',
+      invite_url: 'https://moba.xbotone.com/invite/k7m2qx',
+    }, 'pt')
+  }, 0)
 }
