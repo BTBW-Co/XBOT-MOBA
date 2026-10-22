@@ -162,8 +162,10 @@ export function fetchLeadSetup(token) {
   })
 }
 
-export function startLeadConnect(token, toolkit) {
-  return postOnboarding(`setup/${encodeURIComponent(token)}/connect`, { toolkit })
+export function startLeadConnect(token, toolkit, { returnTo } = {}) {
+  const body = { toolkit }
+  if (returnTo) body.return_to = returnTo
+  return postOnboarding(`setup/${encodeURIComponent(token)}/connect`, body)
 }
 
 export function completeLeadConnect(token, toolkit) {

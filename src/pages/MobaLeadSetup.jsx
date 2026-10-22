@@ -8,10 +8,12 @@ const COPY = {
   gmail: 'E-mail',
 }
 
-export default function MobaLeadSetup() {
-  const { token } = useParams()
-  const [params] = useSearchParams()
+export default function MobaLeadSetup({ token: tokenProp, onClose }) {
+  const params = useParams()
+  const token = tokenProp || params.token
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const fromWhatsapp = !onClose && searchParams.get('from') === 'whatsapp'
   const [view, setView] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -27,7 +29,7 @@ export default function MobaLeadSetup() {
         if (data?.session?.visitor_id && data.session.expires_in) {
           storeVisitorIdentity(data.session, 'personal')
         }
-        if (params.get('done') === '1') {
+        if (searchParams.get('done') === '1') {
           const toolkit = data?.toolkit || 'googlecalendar'
           const result = await completeLeadConnect(token, toolkit)
           if (cancelled) return
@@ -43,13 +45,15 @@ export default function MobaLeadSetup() {
     return () => {
       cancelled = true
     }
-  }, [token, params])
+  }, [token, searchParams])
 
   async function connect(toolkit) {
     setBusy(toolkit)
     setError('')
     try {
-      const data = await startLeadConnect(token, toolkit)
+      const data = await startLeadConnect(token, toolkit, {
+        returnTo: fromWhatsapp ? 'whatsapp' : undefined,
+      })
       if (data?.redirect_url) {
         window.location.assign(data.redirect_url)
         return
@@ -60,6 +64,18 @@ export default function MobaLeadSetup() {
     } finally {
       setBusy('')
     }
+  }
+
+  function goBack() {
+    if (onClose) {
+      onClose()
+      return
+    }
+    if (fromWhatsapp) {
+      window.location.assign(view?.whatsapp_url || 'whatsapp://')
+      return
+    }
+    navigate('/')
   }
 
   return (
@@ -78,20 +94,20 @@ export default function MobaLeadSetup() {
             <li key={tool.toolkit} className={tool.requested ? 'is-requested' : ''}>
               <div>
                 <strong>{COPY[tool.toolkit] || tool.label}</strong>
-                <span>{linked ? tool.account || 'Ligada' : 'Ainda não ligada'}</span>
+                <span>{linked ? tool.account || 'Conectada' : 'Ainda não ligada'}</span>
               </div>
               <button
                 type="button"
                 disabled={linked || busy === tool.toolkit}
                 onClick={() => connect(tool.toolkit)}
               >
-                {linked ? 'Ligada' : busy === tool.toolkit ? 'Abrindo…' : 'Ligar'}
+                {linked ? 'Conectada' : busy === tool.toolkit ? 'Abrindo…' : 'Conectar'}
               </button>
             </li>
           )
         })}
       </ul>
-      <button type="button" className="moba-setup-back" onClick={() => navigate('/')}>
+      <button type="button" className="moba-setup-back" onClick={goBack}>
         Voltar à conversa
       </button>
     </main>

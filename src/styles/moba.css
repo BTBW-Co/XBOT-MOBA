@@ -865,10 +865,18 @@ body.moba-has-bg .moba-boot {
   cursor: default;
 }
 
+.moba-setup-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  overflow: auto;
+  background: #fff;
+}
+
 .moba-setup {
   max-width: 420px;
   margin: 0 auto;
-  padding: max(28px, env(safe-area-inset-top)) 20px 32px;
+  padding: max(28px, env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));
 }
 
 .moba-setup-kicker {
