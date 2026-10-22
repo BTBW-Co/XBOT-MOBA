@@ -377,7 +377,7 @@ export default function MobaPhoneHome() {
                 : invite?.reason === 'full'
                   ? `Os convites de ${invite?.name || 'esta pessoa'} acabaram.`
                   : invite
-                    ? `O convite de ${invite.name} abre quando as ferramentas forem liberadas.`
+                    ? `O convite de ${invite.name} ainda não abre. Essa pessoa está aguardando convites.`
                     : 'Conferindo o convite.'}
           </p>
         ) : null}
