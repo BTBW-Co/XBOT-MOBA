@@ -146,6 +146,30 @@ export function choosePersonalChannel({ visitorId, channel, objectId, pin }) {
   })
 }
 
+export function fetchLeadSetup(token) {
+  const api = getApiBaseUrl()
+  return fetch(`${api}/v1/public/moba/setup/${encodeURIComponent(token)}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).then(async (res) => {
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const err = new Error(data?.detail || `HTTP ${res.status}`)
+      err.status = res.status
+      throw err
+    }
+    return data
+  })
+}
+
+export function startLeadConnect(token, toolkit) {
+  return postOnboarding(`setup/${encodeURIComponent(token)}/connect`, { toolkit })
+}
+
+export function completeLeadConnect(token, toolkit) {
+  return postOnboarding(`setup/${encodeURIComponent(token)}/complete`, { toolkit })
+}
+
 export async function fetchCurrentTerm() {
   const api = getApiBaseUrl()
   const res = await fetch(`${api}/v1/terms/current`, { headers: { Accept: 'application/json' } })

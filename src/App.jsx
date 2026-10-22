@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import MobaHost from './pages/MobaHost'
+import MobaLeadSetup from './pages/MobaLeadSetup'
 import MobaPhoneHome from './pages/MobaPhoneHome'
 
 export default function App() {
@@ -7,6 +8,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MobaPhoneHome />} />
       <Route path="/invite/:slug" element={<MobaPhoneHome />} />
+      <Route path="/setup/:token" element={<MobaLeadSetup />} />
       <Route path="/object-id/:objectId" element={<MobaHost />} />
       {/* Código curto canônico: https://moba.xbotone.com/K7X9QM2 */}
       <Route path="/:publicCode" element={<MobaHost />} />

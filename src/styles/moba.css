@@ -865,6 +865,97 @@ body.moba-has-bg .moba-boot {
   cursor: default;
 }
 
+.moba-setup {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: max(28px, env(safe-area-inset-top)) 20px 32px;
+}
+
+.moba-setup-kicker {
+  margin: 0 0 8px;
+  color: #737373;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.moba-setup h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.moba-setup-lead,
+.moba-setup-error,
+.moba-setup-notice {
+  margin: 12px 0 0;
+  line-height: 1.45;
+}
+
+.moba-setup-error {
+  color: #9f1239;
+}
+
+.moba-setup-notice {
+  color: #166534;
+}
+
+.moba-setup-list {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.moba-setup-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.moba-setup-list li.is-requested {
+  box-shadow: 0 0 0 1.5px #1967d2;
+}
+
+.moba-setup-list strong,
+.moba-setup-list span {
+  display: block;
+}
+
+.moba-setup-list span {
+  margin-top: 4px;
+  color: #737373;
+  font-size: 14px;
+}
+
+.moba-setup-list button,
+.moba-setup-back {
+  border: 0;
+  border-radius: 999px;
+  background: #1967d2;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.moba-setup-list button:disabled {
+  background: #e8e8e3;
+  color: #737373;
+  cursor: default;
+}
+
+.moba-setup-back {
+  margin-top: 22px;
+  background: #262626;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

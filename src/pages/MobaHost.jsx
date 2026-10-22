@@ -44,6 +44,8 @@ const RESERVED_PATHS = new Set([
   'vite.svg',
   'health',
   'api',
+  'setup',
+  'invite',
 ])
 
 const PUBLIC_CODE_RE = /^[0-9A-Za-z]{4,12}$/
