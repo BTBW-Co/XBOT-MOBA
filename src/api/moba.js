@@ -137,6 +137,15 @@ export function savePhoneProfile(body) {
   return postOnboarding('phone/profile', body)
 }
 
+export function choosePersonalChannel({ visitorId, channel, objectId, pin }) {
+  return postOnboarding('phone/channel', {
+    visitor_id: visitorId,
+    channel,
+    object_id: objectId || null,
+    pin: pin || null,
+  })
+}
+
 export async function fetchCurrentTerm() {
   const api = getApiBaseUrl()
   const res = await fetch(`${api}/v1/terms/current`, { headers: { Accept: 'application/json' } })

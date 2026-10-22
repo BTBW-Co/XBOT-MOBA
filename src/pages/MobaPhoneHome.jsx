@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import PhoneCountryField from '../components/PhoneCountryField'
 import TurnstileCheck from '../components/TurnstileCheck'
 import MobaBootLoader from '../components/MobaBootLoader'
-import { bootstrapMoba, fetchCurrentTerm, fetchInvite, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import { bootstrapMoba, choosePersonalChannel, fetchCurrentTerm, fetchInvite, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
 import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import { getCountryCallingCode } from 'libphonenumber-js/min'
 import { resolvePhone, suggestIso } from '../lib/phoneInput'
@@ -17,6 +17,7 @@ import {
 } from '../lib/visitorLocale'
 
 const PERSONAL_REF = 'personal'
+const CHANNEL_PENDING = 'moba.channel.pending'
 const CODE_LENGTH = 6
 
 function copy(locale, key, vars = {}) {
@@ -36,6 +37,8 @@ function errorText(locale, code) {
   if (code === 'invalid_profile') return copy(locale, 'profileInvalid')
   if (code === 'email_in_use') return copy(locale, 'emailInUse')
   if (code === 'terms_required') return copy(locale, 'termsRequired')
+  if (code === 'line_unavailable') return copy(locale, 'channelLineDown')
+  if (code === 'whatsapp_failed') return copy(locale, 'channelSendFailed')
   if (code === 'turnstile_failed' || code === 'turnstile_required') return copy(locale, 'humanCheckFailed')
   if (code && !String(code).startsWith('HTTP ')) return code
   return ''
@@ -109,6 +112,7 @@ export default function MobaPhoneHome() {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '' })
   const [invite, setInvite] = useState(null)
+  const [channelNote, setChannelNote] = useState('')
   const codeRefs = useRef([])
 
   useEffect(() => {
@@ -118,7 +122,9 @@ export default function MobaPhoneHome() {
     setLocale(suggestClientLocale())
     const identity = readVisitorIdentity()
     if (personal && identity?.objectRef === PERSONAL_REF) {
-      setPhase('chat')
+      const pending = sessionStorage.getItem(CHANNEL_PENDING) === '1'
+      if (pending) setVisitor(identity)
+      setPhase(pending ? 'channel' : 'chat')
       setReady(true)
       return
     }
@@ -147,10 +153,39 @@ export default function MobaPhoneHome() {
   function enterConversation(session) {
     storeVisitorIdentity(session, objectRef)
     if (personal) {
-      setPhase('chat')
+      sessionStorage.setItem(CHANNEL_PENDING, '1')
+      setVisitor(session)
+      setChannelNote('')
+      setPhase('channel')
       return
     }
     navigate(`/${encodeURIComponent(objectRef)}`, { replace: true })
+  }
+
+  function openMoba() {
+    sessionStorage.removeItem(CHANNEL_PENDING)
+    setPhase('chat')
+  }
+
+  async function chooseWhatsapp() {
+    setLoading(true)
+    setError('')
+    setChannelNote('')
+    try {
+      const identity = visitor?.visitor_id ? visitor : readVisitorIdentity()
+      await choosePersonalChannel({
+        visitorId: identity?.visitor_id,
+        channel: 'whatsapp',
+        objectId: explicitObject || null,
+        pin,
+      })
+      sessionStorage.removeItem(CHANNEL_PENDING)
+      setChannelNote(copy(locale, 'channelWhatsappSent'))
+    } catch (err) {
+      setError(errorText(locale, err?.detail) || copy(locale, 'channelSendFailed'))
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function sendCode(nextPhone, token = turnstileToken) {
@@ -286,13 +321,21 @@ export default function MobaPhoneHome() {
   }
 
   const title =
-    phase === 'phone' ? copy(locale, 'phoneTitle') : phase === 'code' ? copy(locale, 'codeTitle') : copy(locale, 'profileTitle')
+    phase === 'phone'
+      ? copy(locale, 'phoneTitle')
+      : phase === 'code'
+        ? copy(locale, 'codeTitle')
+        : phase === 'channel'
+          ? copy(locale, 'channelTitle')
+          : copy(locale, 'profileTitle')
   const subtitle =
     phase === 'phone'
       ? copy(locale, 'phoneSubtitle')
       : phase === 'code'
         ? copy(locale, 'codeSubtitle', { phone })
-        : copy(locale, 'profileSubtitle')
+        : phase === 'channel'
+          ? copy(locale, 'channelSubtitle')
+          : copy(locale, 'profileSubtitle')
 
   return (
     <div className="moba-gate">
@@ -410,6 +453,21 @@ export default function MobaPhoneHome() {
               </button>
             </div>
           </form>
+        ) : phase === 'channel' ? (
+          <div className="moba-gate-form">
+            <button className="moba-gate-submit" type="button" disabled={loading} onClick={openMoba}>
+              {copy(locale, 'channelMoba')}
+            </button>
+            <button className="moba-gate-choice" type="button" disabled={loading} onClick={() => void chooseWhatsapp()}>
+              {loading ? copy(locale, 'channelSending') : copy(locale, 'channelWhatsapp')}
+            </button>
+            <button className="moba-gate-choice" type="button" disabled>
+              {copy(locale, 'channelImessage')}
+              <span className="moba-gate-soon">{copy(locale, 'channelSoon')}</span>
+            </button>
+            {channelNote ? <p className="moba-gate-note">{channelNote}</p> : null}
+            {error ? <p className="moba-gate-error">{error}</p> : null}
+          </div>
         ) : (
           <form className="moba-gate-form" onSubmit={submitProfile}>
             <label className="moba-gate-label" htmlFor="moba-given">{copy(locale, 'profileGiven')}</label>

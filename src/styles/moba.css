@@ -803,6 +803,36 @@ body.moba-has-bg .moba-boot {
   cursor: default;
 }
 
+.moba-gate-choice {
+  border: 1px solid #111111;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+}
+
+.moba-gate-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.moba-gate-soon {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12px;
+  color: #8a8a8a;
+}
+
+.moba-gate-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #3f3f3f;
+}
+
 .moba-gate-error {
   margin: 0;
   font-size: 13px;
