@@ -22,8 +22,23 @@ test('verified identity survives navigation and expires', () => {
   storeVisitorIdentity(data, '7XGVD9J')
   assert.equal(readVisitorIdentity().visitor_id, data.visitor_id)
   assert.equal(readVisitorIdentity().channel_id, 'channel')
+  assert.equal(readVisitorIdentity().expiresAt, null)
+  storeVisitorIdentity({ ...data, expires_in: null }, '7XGVD9J')
+  assert.equal(readVisitorIdentity().visitor_id, data.visitor_id)
   storeVisitorIdentity({ ...data, expires_in: -1 }, '7XGVD9J')
   assert.equal(readVisitorIdentity(), null)
+})
+
+test('a grant still inside the old day stays without a deadline', () => {
+  values.clear()
+  const visitor_id = 'ext_mv_' + 'd'.repeat(32)
+  memoryStorage.setItem('moba_verified_visitor', JSON.stringify({
+    visitor_id,
+    objectRef: 'personal',
+    expiresAt: Date.now() + 60_000,
+  }))
+  assert.equal(readVisitorIdentity().visitor_id, visitor_id)
+  assert.equal(readVisitorIdentity().expiresAt, null)
 })
 
 test('SMS identity is never accepted as an administrative operator token', () => {

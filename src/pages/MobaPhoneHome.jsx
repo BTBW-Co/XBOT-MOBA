@@ -7,7 +7,7 @@ import MobaBootLoader from '../components/MobaBootLoader'
 import { bootstrapMoba, choosePersonalChannel, fetchCurrentTerm, fetchInvite, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
 import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import { getCountryCallingCode } from 'libphonenumber-js/min'
-import { resolvePhone, suggestIso } from '../lib/phoneInput'
+import { canSubmitPhone, resolvePhone, suggestIso } from '../lib/phoneInput'
 import {
   normalizeVisitorLocale,
   readExplicitLocale,
@@ -213,11 +213,11 @@ export default function MobaPhoneHome() {
 
   async function submitPhone(event) {
     event.preventDefault()
-    const resolved = resolvePhone(phoneField.digits, phoneField.iso)
-    if (phoneField.pending || resolved.pending || resolved.e164.length < 10 || resolved.e164.length > 15) {
+    if (!canSubmitPhone(phoneField.digits, phoneField.iso, phoneField.pending)) {
       setError(copy(locale, 'phoneInvalid'))
       return
     }
+    const resolved = resolvePhone(phoneField.digits, phoneField.iso)
     if (!turnstileToken) {
       setError(copy(locale, 'humanRequired'))
       return
@@ -347,6 +347,7 @@ export default function MobaPhoneHome() {
     )
   }
 
+  const phoneReady = canSubmitPhone(phoneField.digits, phoneField.iso, phoneField.pending)
   const title =
     phase === 'phone'
       ? copy(locale, 'phoneTitle')
@@ -420,7 +421,7 @@ export default function MobaPhoneHome() {
               onToken={setTurnstileToken}
             />
             {error ? <p className="moba-gate-error">{error}</p> : null}
-            <button className="moba-gate-submit" type="submit" disabled={loading || !turnstileToken}>
+            <button className="moba-gate-submit" type="submit" disabled={loading || !turnstileToken || !phoneReady}>
               {loading ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
               {loading ? null : <span aria-hidden="true"> →</span>}
             </button>

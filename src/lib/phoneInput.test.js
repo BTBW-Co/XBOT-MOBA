@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { caretForDigitCount, digitsForCountry, displayPhone, readPhoneField, resolvePhone, suggestIso } from './phoneInput.js'
+import { canSubmitPhone, caretForDigitCount, digitsForCountry, displayPhone, readPhoneField, resolvePhone, suggestIso } from './phoneInput.js'
 
 test('brasil formata DDD e celular', () => {
   assert.equal(displayPhone('BR', '54981387397'), '+55 (54) 98138-7397')
@@ -18,20 +18,38 @@ test('trocar o DDI no número troca o país', () => {
   assert.equal(resolvePhone('1', 'BR').display, '+1')
 })
 
-test('editar o DDI troca o país e um código inválido não', () => {
+test('editar o DDI troca o país e um código inválido fica sem país', () => {
   const argentina = readPhoneField('+54 (54) 98138-7397', 'BR')
   assert.equal(argentina.iso, 'AR')
   assert.equal(argentina.pending, false)
-  const invalid = readPhoneField('+8 (54) 98138-7397', 'BR')
-  assert.equal(invalid.iso, 'BR')
-  assert.equal(invalid.pending, true)
-  assert.match(invalid.display, /^\+8 /)
+  const incomplete = readPhoneField('+8 (54) 98138-7397', 'BR')
+  assert.equal(incomplete.iso, '')
+  assert.equal(incomplete.pending, true)
+  assert.match(incomplete.display, /^\+8 /)
+  const missing = readPhoneField('+999', 'BR')
+  assert.equal(missing.iso, '')
+  assert.equal(missing.pending, true)
+  assert.equal(missing.display, '+999')
+  assert.equal(canSubmitPhone(missing.digits, missing.iso, missing.pending), false)
 })
 
-test('código incompleto não troca a bandeira', () => {
+test('apagar o DDI deixa só o + e digitar outro troca o país', () => {
+  const cleared = readPhoneField('+', 'BR')
+  assert.equal(cleared.display, '+')
+  assert.equal(cleared.digits, '')
+  assert.equal(cleared.iso, '')
+  assert.equal(cleared.pending, true)
+  assert.equal(readPhoneField('', 'BR').display, '+')
+  assert.equal(readPhoneField('55', 'US').iso, 'BR')
+  assert.equal(readPhoneField('+351', 'BR').iso, 'PT')
+  assert.equal(canSubmitPhone('5554981387397', 'BR', false), true)
+  assert.equal(canSubmitPhone('55', 'BR', false), false)
+})
+
+test('código incompleto não escolhe país', () => {
   const parsed = resolvePhone('59', 'BR')
   assert.equal(parsed.pending, true)
-  assert.equal(parsed.iso, 'BR')
+  assert.equal(parsed.iso, '')
   assert.equal(parsed.display, '+59')
   assert.equal(parsed.e164, '')
 })
@@ -47,8 +65,10 @@ test('escolher outro país mantém o número nacional', () => {
   assert.equal(digitsForCountry('PY', '55', 'BR'), '595')
 })
 
-test('cursor acompanha os dígitos da máscara', () => {
+test('cursor acompanha os dígitos da máscara e não passa do +', () => {
   assert.equal(caretForDigitCount('+55 (54) 98138-7397', 4), 7)
+  assert.equal(caretForDigitCount('+55', 0), 1)
+  assert.equal(caretForDigitCount('+', 0), 1)
 })
 
 test('país inicial segue o idioma do navegador', () => {

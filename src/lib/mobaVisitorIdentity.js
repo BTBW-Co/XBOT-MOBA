@@ -25,12 +25,19 @@ function clearStored() {
 export function readVisitorIdentity() {
   try {
     const value = JSON.parse(readStored() || 'null')
-    if (!value || value.expiresAt <= Date.now() || !/^ext_mv_[A-Za-z0-9_-]{32}$/.test(value.visitor_id)) return null
+    if (!value || !/^ext_mv_[A-Za-z0-9_-]{32}$/.test(value.visitor_id)) return null
+    if (typeof value.expiresAt === 'number' && value.expiresAt <= Date.now()) return null
+    if (typeof value.expiresAt === 'number') {
+      value.expiresAt = null
+      writeStored(JSON.stringify(value))
+    }
     return value
   } catch { return null }
 }
 export function storeVisitorIdentity(data, objectRef) {
-  const value = { ...data, objectRef, expiresAt: Date.now() + data.expires_in * 1000 }
+  const seconds = Number(data?.expires_in)
+  const expiresAt = Number.isFinite(seconds) && seconds < 0 ? 0 : null
+  const value = { ...data, objectRef, expiresAt }
   writeStored(JSON.stringify(value))
 }
 

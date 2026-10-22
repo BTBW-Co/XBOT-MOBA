@@ -175,7 +175,7 @@ function injectFullscreenCss() {
       min-width: 0 !important;
     }
     body.moba-fullscreen .xbot-header-name {
-      font-family: "Geom", "DM Sans", sans-serif !important;
+      font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif !important;
       font-size: 18px !important;
       font-weight: 600 !important;
       font-optical-sizing: auto !important;
@@ -336,7 +336,7 @@ function injectFullscreenCss() {
       display: inline-flex;
       align-items: center;
       margin-left: 12px;
-      font-family: 'Geom', sans-serif;
+      font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
       font-weight: 600;
       font-size: 21px;
       line-height: 1;
@@ -1022,9 +1022,9 @@ function injectFullscreenCss() {
       letter-spacing: 0.01em;
       cursor: default !important;
     }
-    /* Wordmark xbot (Geom) — mesma tipografia do logo do site / header */
+    /* Wordmark xbot */
     body.moba-fullscreen .xbot-powered strong {
-      font-family: 'Geom', sans-serif !important;
+      font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif !important;
       font-weight: 600 !important;
       font-size: 13px !important;
       letter-spacing: -0.04em !important;

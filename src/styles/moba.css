@@ -166,7 +166,7 @@ body.moba-has-bg .moba-boot {
   border-radius: 0.85rem;
   background: #fafafa;
   text-align: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: 1.45rem;
   font-weight: 650;
   letter-spacing: 0.08em;
@@ -221,7 +221,7 @@ body.moba-has-bg .moba-boot {
   padding: 2rem 1.5rem 2.5rem;
   text-align: center;
   color: #1a1a1a;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
   overflow: hidden;
   background:
@@ -302,7 +302,7 @@ body.moba-has-bg .moba-boot {
 
 .moba-error h1 {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: clamp(1.45rem, 4vw, 1.85rem);
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -349,7 +349,7 @@ body.moba-has-bg .moba-boot {
 }
 
 .moba-brand {
-  font-family: 'Geom', sans-serif;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 600;
   letter-spacing: -0.04em;
   text-transform: lowercase;
@@ -525,7 +525,7 @@ body.moba-has-bg .moba-boot {
 
 .moba-gate-title {
   margin: 0;
-  font-family: Newsreader, 'Iowan Old Style', Palatino, Georgia, serif;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 600;
   font-size: 2rem;
   line-height: 1.15;

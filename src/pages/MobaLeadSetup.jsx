@@ -31,7 +31,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
         if (cancelled) return
         setError('')
         setView(data)
-        if (data?.session?.visitor_id && data.session.expires_in) {
+        if (data?.session?.visitor_id) {
           storeVisitorIdentity(data.session, 'personal')
         }
         if (searchParams.get('done') === '1') {
