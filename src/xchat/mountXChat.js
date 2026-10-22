@@ -1695,22 +1695,6 @@ function bindInviteDismiss() {
   })
 }
 
-async function copyInviteUrl(url) {
-  try {
-    await navigator.clipboard.writeText(url)
-    return true
-  } catch {
-    try {
-      const field = document.querySelector('.moba-invite-popover:not([hidden]) .moba-invite-url')
-      field?.focus()
-      field?.select()
-      return document.execCommand('copy')
-    } catch {
-      return false
-    }
-  }
-}
-
 /** Ícone à esquerda do nome. O popover copia o link /invite/{código}. */
 function renderInviteShare(chip, nameEl, inviteUrl, locale) {
   const url = readInviteUrl({ invite_url: inviteUrl })
@@ -1758,19 +1742,41 @@ function renderInviteShare(chip, nameEl, inviteUrl, locale) {
       field.select()
     })
     popover.addEventListener('click', (event) => event.stopPropagation())
-    copy.addEventListener('click', async () => {
-      const copied = await copyInviteUrl(button.dataset.url || '')
-      if (!copied) return
-      copy.textContent = tLocale(locale, 'inviteCopied')
-      window.setTimeout(() => {
-        copy.textContent = copy.dataset.label || tLocale(locale, 'inviteCopy')
-      }, 1600)
+    copy.addEventListener('click', () => {
+      const value = button.dataset.url || ''
+      const mark = () => {
+        copy.textContent = tLocale(locale, 'inviteCopied')
+        window.setTimeout(() => {
+          copy.textContent = copy.dataset.label || tLocale(locale, 'inviteCopy')
+        }, 1600)
+      }
+      const area = document.createElement('textarea')
+      area.value = value
+      area.setAttribute('readonly', '')
+      area.style.position = 'fixed'
+      area.style.top = '0'
+      area.style.left = '0'
+      area.style.opacity = '0'
+      document.body.appendChild(area)
+      area.focus()
+      area.select()
+      let legacy = false
+      try { legacy = document.execCommand('copy') } catch { legacy = false }
+      area.remove()
+      field.focus()
+      field.select()
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(value).then(mark).catch(() => { if (legacy) mark() })
+        return
+      }
+      if (legacy) mark()
     })
   }
   const label = tLocale(locale, 'shareInvite')
   button.dataset.url = url
   button.setAttribute('aria-label', label)
   if (!popover) return
+  popover.setAttribute('aria-label', label)
   const title = popover.querySelector('.moba-invite-title')
   const field = popover.querySelector('.moba-invite-url')
   const copy = popover.querySelector('.moba-invite-copy')
@@ -2002,35 +2008,4 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
       ensureHeaderChrome(headerChrome)
     }, ms)
   })
-}
-
-if (import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === 'invite') {
-  window.setTimeout(() => {
-    injectFullscreenCss()
-    document.documentElement.classList.add('moba-fullscreen')
-    document.body.classList.add('moba-fullscreen', 'moba-xchat-live')
-    const box = document.createElement('div')
-    box.className = 'xbot-chatbox is-open is-visible'
-    const header = document.createElement('header')
-    header.className = 'xbot-header'
-    header.style.display = 'flex'
-    header.style.alignItems = 'center'
-    const text = document.createElement('div')
-    text.className = 'xbot-header-text'
-    const bot = document.createElement('div')
-    bot.className = 'xbot-header-name'
-    bot.textContent = 'Xbot'
-    const role = document.createElement('div')
-    role.className = 'xbot-header-role'
-    role.textContent = 'Assistente pessoal'
-    text.append(bot, role)
-    header.append(text)
-    box.append(header)
-    document.body.append(box)
-    renderOperatorAccount({
-      name: 'Ana Souza',
-      email: 'ana@example.com',
-      invite_url: 'https://moba.xbotone.com/invite/k7m2qx',
-    }, 'pt')
-  }, 0)
 }
