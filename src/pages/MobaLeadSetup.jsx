@@ -87,7 +87,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
     <main className="moba-setup">
       <p className="moba-setup-kicker">Conta deste telefone</p>
       <h1>{view?.name ? `${view.name}, ligue ou troque a conta` : 'Ligue ou troque a conta'}</h1>
-      <p className="moba-setup-lead">Estas contas ficam nesta pessoa. Não entram na workspace.</p>
+      <p className="moba-setup-lead">Estas contas ficam vinculadas a essa conta.</p>
       {error ? <p className="moba-setup-error">{error}</p> : null}
       {notice ? <p className="moba-setup-notice">{notice}</p> : null}
       <section className="moba-setup-section" aria-labelledby="moba-setup-heading">
@@ -96,6 +96,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
           {(view?.tools || []).map((tool) => {
             const linked = tool.status === 'connected'
             const label = tool.label
+            const account = accountLine(tool)
             return (
               <button
                 key={tool.toolkit}
@@ -110,7 +111,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
                 </span>
                 <span className="moba-setup-copy">
                   <strong>{label}</strong>
-                  <span>{linked && tool.account ? tool.account : tool.description}</span>
+                  <span>{linked && account ? account : tool.description}</span>
                 </span>
                 <span className="moba-setup-action" aria-hidden="true">
                   {linked ? 'Trocar' : <PlusIcon />}
@@ -125,6 +126,13 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
       </button>
     </main>
   )
+}
+
+function accountLine(tool) {
+  const account = String(tool?.account || '').trim()
+  if (!account) return ''
+  if (tool?.toolkit === 'googlecalendar' && !account.includes('@')) return ''
+  return account
 }
 
 function PlusIcon() {

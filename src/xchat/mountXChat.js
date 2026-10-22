@@ -306,6 +306,11 @@ function injectFullscreenCss() {
       text-align: center;
       flex-shrink: 0;
     }
+    @media (max-width: 767px) {
+      body.moba-fullscreen .moba-operator-avatar {
+        display: none;
+      }
+    }
     body.moba-fullscreen .moba-operator-name {
       margin: 0;
       border: 0;
@@ -358,6 +363,74 @@ function injectFullscreenCss() {
       width: 0 !important;
       height: 0 !important;
       display: none !important;
+    }
+    body.moba-fullscreen.moba-thread-pending .xbot-messages {
+      position: relative !important;
+    }
+    body.moba-fullscreen.moba-thread-pending .xbot-messages > :not(.moba-thread-skeleton) {
+      visibility: hidden !important;
+    }
+    body.moba-fullscreen .xbot-chatbox > .moba-thread-skeleton {
+      position: absolute !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 4 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 18px !important;
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 24px 0 32px !important;
+      background: #ffffff !important;
+      pointer-events: none !important;
+      box-sizing: border-box !important;
+    }
+    body.moba-fullscreen .moba-thread-skeleton-row {
+      display: flex !important;
+      width: 100% !important;
+      max-width: 40rem !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+      box-sizing: border-box !important;
+    }
+    body.moba-fullscreen .moba-thread-skeleton-row.is-user {
+      justify-content: flex-end !important;
+    }
+    body.moba-fullscreen .moba-thread-skeleton-bar {
+      display: block;
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(90deg, #eceae6 0%, #f7f6f4 42%, #eceae6 80%);
+      background-size: 220% 100%;
+      animation: moba-thread-skeleton 1.15s ease-in-out infinite;
+    }
+    body.moba-fullscreen .moba-thread-skeleton-row.is-bot .moba-thread-skeleton-bar {
+      height: 68px;
+    }
+    @media (min-width: 640px) {
+      body.moba-fullscreen .moba-thread-skeleton-row {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+      }
+    }
+    @media (min-width: 1024px) {
+      body.moba-fullscreen .moba-thread-skeleton-row {
+        max-width: 48rem !important;
+        padding-left: 4rem !important;
+        padding-right: 4rem !important;
+      }
+    }
+    @keyframes moba-thread-skeleton {
+      0% { background-position: 100% 0; }
+      100% { background-position: 0 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.moba-fullscreen .moba-thread-skeleton-bar {
+        animation: none;
+      }
     }
     body.moba-fullscreen .xbot-chatbox,
     body.moba-fullscreen .xbot-chatbox * {
@@ -1236,6 +1309,167 @@ function pickOwnedMime() {
   return candidates.find((item) => Native.isTypeSupported(item.mimeType)) || fallback
 }
 
+const SKELETON_BARS = [
+  ['bot', '78%'],
+  ['bot', '52%'],
+  ['user', '46%'],
+  ['bot', '86%'],
+  ['user', '34%'],
+]
+
+function messagesPinnedToLatest(el) {
+  if (!el) return false
+  const rows = el.querySelectorAll('.xbot-message-row')
+  if (!rows.length) return true
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= 28
+}
+
+function syncConversationSkeleton() {
+  const messages = document.getElementById('xbot-messages')
+  const box = messages?.closest('.xbot-chatbox')
+  const skeleton = box?.querySelector(':scope > .moba-thread-skeleton')
+  if (!messages || !box || !skeleton) return
+  const boxRect = box.getBoundingClientRect()
+  const msgRect = messages.getBoundingClientRect()
+  skeleton.style.top = `${Math.max(0, msgRect.top - boxRect.top)}px`
+  skeleton.style.height = `${Math.max(0, msgRect.height)}px`
+}
+
+function showConversationSkeleton() {
+  document.body.classList.add('moba-thread-pending')
+  const attach = () => {
+    const messages = document.getElementById('xbot-messages')
+    const box = messages?.closest('.xbot-chatbox')
+    if (!messages || !box || !document.body.classList.contains('moba-thread-pending')) return false
+    messages.setAttribute('aria-busy', 'true')
+    let skeleton = box.querySelector(':scope > .moba-thread-skeleton')
+    if (!skeleton) {
+      skeleton = document.createElement('div')
+      skeleton.className = 'moba-thread-skeleton'
+      skeleton.setAttribute('aria-hidden', 'true')
+      SKELETON_BARS.forEach(([side, width]) => {
+        const row = document.createElement('span')
+        row.className = `moba-thread-skeleton-row is-${side}`
+        const bar = document.createElement('span')
+        bar.className = 'moba-thread-skeleton-bar'
+        bar.style.width = width
+        row.appendChild(bar)
+        skeleton.appendChild(row)
+      })
+      box.appendChild(skeleton)
+    }
+    syncConversationSkeleton()
+    if (typeof ResizeObserver !== 'undefined') {
+      if (!window.__mobaThreadSkeletonObserver) {
+        window.__mobaThreadSkeletonObserver = new ResizeObserver(() => {
+          if (document.body.classList.contains('moba-thread-pending')) syncConversationSkeleton()
+        })
+      }
+      window.__mobaThreadSkeletonObserver.observe(messages)
+      window.__mobaThreadSkeletonObserver.observe(box)
+    }
+    return true
+  }
+  if (!attach()) {
+    let left = 40
+    const timer = window.setInterval(() => {
+      left -= 1
+      if (attach() || left <= 0 || !document.body.classList.contains('moba-thread-pending')) {
+        window.clearInterval(timer)
+      }
+    }, 50)
+  }
+  if (!window.__mobaThreadSkeletonResize) {
+    window.__mobaThreadSkeletonResize = () => {
+      if (document.body.classList.contains('moba-thread-pending')) syncConversationSkeleton()
+    }
+    window.addEventListener('resize', window.__mobaThreadSkeletonResize)
+  }
+}
+
+function hideConversationSkeleton() {
+  document.body.classList.remove('moba-thread-pending')
+  const messages = document.getElementById('xbot-messages')
+  if (messages) messages.removeAttribute('aria-busy')
+  document.querySelector('.xbot-chatbox > .moba-thread-skeleton')?.remove()
+}
+
+function threadMediaPending(el) {
+  if (!el) return false
+  const images = el.querySelectorAll('.xbot-message-row img')
+  for (const img of images) {
+    if (!img.complete) return true
+  }
+  return false
+}
+
+/** Esconde o fio até o histórico existir e o scroll estar na última mensagem. */
+function installConversationSkeleton() {
+  showConversationSkeleton()
+  window.setTimeout(() => {
+    if (document.body.classList.contains('moba-thread-pending')) hideConversationSkeleton()
+  }, 8000)
+  if (window.__mobaThreadSkeletonGate) return
+  window.__mobaThreadSkeletonGate = true
+  const original = window.fetch.bind(window)
+  window.__mobaThreadSkeletonPending = 0
+  const revealWhenPinned = () => {
+    const started = performance.now()
+    let stable = 0
+    const tick = () => {
+      if (!document.body.classList.contains('moba-thread-pending')) return
+      const el = document.getElementById('xbot-messages')
+      syncConversationSkeleton()
+      const ready = messagesPinnedToLatest(el) && !threadMediaPending(el)
+      stable = ready ? stable + 1 : 0
+      const waited = performance.now() - started
+      if ((ready && stable >= 4 && waited >= 80) || waited > 1500) {
+        hideConversationSkeleton()
+        return
+      }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }
+  window.fetch = async (input, init) => {
+    const response = await original(input, init)
+    const raw = typeof input === 'string' ? input : input instanceof Request ? input.url : input?.url || ''
+    if (!String(raw).includes('/v1/xchat/history')) return response
+    window.__mobaThreadSkeletonPending += 1
+    let released = false
+    const release = () => {
+      if (released) return
+      released = true
+      window.__mobaThreadSkeletonPending = Math.max(0, (window.__mobaThreadSkeletonPending || 1) - 1)
+      if (window.__mobaThreadSkeletonPending > 0) return
+      revealWhenPinned()
+    }
+    if (!response.ok) {
+      queueMicrotask(release)
+      return response
+    }
+    const readJson = response.json.bind(response)
+    response.json = async () => {
+      try {
+        return await readJson()
+      } finally {
+        queueMicrotask(() => requestAnimationFrame(release))
+      }
+    }
+    return response
+  }
+  window.__mobaRevealThreadSkeleton = revealWhenPinned
+}
+
+function armConversationSkeletonIdle() {
+  window.setTimeout(() => {
+    if (!document.body.classList.contains('moba-thread-pending')) return
+    if ((window.__mobaThreadSkeletonPending || 0) > 0) return
+    if (typeof window.__mobaRevealThreadSkeleton === 'function') window.__mobaRevealThreadSkeleton()
+    else hideConversationSkeleton()
+  }, 1600)
+}
+
 function mobaVisitorId() {
   const cfg = window.__xbotConfig || {}
   const ext = cfg.user && cfg.user.externalUserId != null ? String(cfg.user.externalUserId).trim() : ''
@@ -2039,6 +2273,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
       externalUserId: `moba_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     }
   }
+  installConversationSkeleton()
   window.initXBot(initConfig)
 
   if (typeof window.setXBotContext === 'function') {
@@ -2047,6 +2282,8 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
 
   await waitFor(() => typeof window.openXBot === 'function')
   window.openXBot()
+  showConversationSkeleton()
+  armConversationSkeletonIdle()
   const headerChrome = {
     locale: activeLocale,
     showBrand: !personal,
