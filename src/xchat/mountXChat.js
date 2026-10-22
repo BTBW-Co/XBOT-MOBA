@@ -541,6 +541,44 @@ function injectFullscreenCss() {
       font-weight: 500 !important;
       color: #1967d2 !important;
     }
+    body.moba-fullscreen .xbot-message-row--share,
+    body.moba-fullscreen .xbot-message-row--share .xbot-message-col,
+    body.moba-fullscreen .xbot-message-row--share .xbot-message.bot,
+    body.moba-fullscreen .xbot-message-row--share .xbot-text {
+      width: 100% !important;
+      max-width: 100% !important;
+      align-items: stretch !important;
+    }
+    body.moba-fullscreen .xbot-share-block {
+      position: relative !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 32px 14px 14px !important;
+      border: 1px solid #e5e5e5 !important;
+      border-radius: 14px !important;
+      background: #f6f6f6 !important;
+    }
+    body.moba-fullscreen .xbot-share-copy {
+      position: absolute !important;
+      top: 6px !important;
+      right: 6px !important;
+      width: 28px !important;
+      height: 28px !important;
+      color: #8e8e8e !important;
+      background: transparent !important;
+    }
+    body.moba-fullscreen .xbot-share-block pre,
+    body.moba-fullscreen .xbot-share-block code {
+      margin: 0 !important;
+      white-space: pre-wrap !important;
+      word-break: break-all !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+      font-size: 13px !important;
+      line-height: 1.45 !important;
+      color: #0d0d0d !important;
+      background: transparent !important;
+    }
     /* Fallback: mensagem que é só um <a> (widget antigo) ocupa a mesma coluna */
     body.moba-fullscreen .xbot-message.bot .xbot-text:has(> p:only-child > a:only-child) {
       width: 100% !important;
