@@ -37,6 +37,7 @@ function errorText(locale, code) {
   if (code === 'invalid_profile') return copy(locale, 'profileInvalid')
   if (code === 'email_in_use') return copy(locale, 'emailInUse')
   if (code === 'terms_required') return copy(locale, 'termsRequired')
+  if (code === 'invite_closed') return 'Este convite não abre.'
   if (code === 'line_unavailable') return copy(locale, 'channelLineDown')
   if (code === 'whatsapp_failed') return copy(locale, 'channelSendFailed')
   if (code === 'turnstile_failed' || code === 'turnstile_required') return copy(locale, 'humanCheckFailed')
@@ -284,6 +285,7 @@ export default function MobaPhoneHome() {
       })
       enterConversation({ ...visitor, name: `${givenName} ${familyName}`.trim(), email, phone: visitor.phone || phone })
     } catch (err) {
+      if (err?.detail === 'invite_closed') setInvite({ missing: true })
       setError(errorText(locale, err?.detail) || copy(locale, 'profileInvalid'))
     } finally {
       setLoading(false)
@@ -320,6 +322,30 @@ export default function MobaPhoneHome() {
     return <PersonalAssistant locale={locale} />
   }
 
+  if (inviteSlug && !invite) {
+    return (
+      <div className="moba-gate" aria-busy="true">
+        <main className="moba-gate-main">
+          <img className="moba-gate-icon" src="/onboarding-icon.png" alt="" width="56" height="56" />
+          <h1 className="moba-gate-title">Convite</h1>
+          <p className="moba-gate-sub">Conferindo o convite.</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (inviteSlug && invite?.missing) {
+    return (
+      <div className="moba-gate">
+        <main className="moba-gate-main">
+          <img className="moba-gate-icon" src="/onboarding-icon.png" alt="" width="56" height="56" />
+          <h1 className="moba-gate-title">Convite</h1>
+          <p className="moba-gate-sub">Este convite não abre.</p>
+        </main>
+      </div>
+    )
+  }
+
   const title =
     phase === 'phone'
       ? copy(locale, 'phoneTitle')
@@ -345,7 +371,7 @@ export default function MobaPhoneHome() {
         {inviteSlug ? (
           <p className="moba-gate-sub">
             {invite?.missing
-              ? 'Este convite não existe.'
+              ? 'Este convite não abre.'
               : invite?.open
                 ? `Convite de ${invite.name}.`
                 : invite?.reason === 'full'
