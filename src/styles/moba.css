@@ -1000,6 +1000,7 @@ body.moba-has-bg .moba-boot {
   color: #737373;
   font-size: 14px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .moba-setup-action {
@@ -1010,6 +1011,12 @@ body.moba-has-bg .moba-boot {
   width: 36px;
   height: 36px;
   color: #262626;
+}
+
+.moba-setup-card.is-linked .moba-setup-action {
+  width: auto;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .moba-setup-card:disabled .moba-setup-action {

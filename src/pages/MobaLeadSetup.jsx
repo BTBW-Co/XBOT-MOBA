@@ -86,7 +86,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   return (
     <main className="moba-setup">
       <p className="moba-setup-kicker">Conta deste telefone</p>
-      <h1>{view?.name ? `${view.name}, ligue a conta` : 'Ligue a conta'}</h1>
+      <h1>{view?.name ? `${view.name}, ligue ou troque a conta` : 'Ligue ou troque a conta'}</h1>
       <p className="moba-setup-lead">Estas contas ficam nesta pessoa. Não entram na workspace.</p>
       {error ? <p className="moba-setup-error">{error}</p> : null}
       {notice ? <p className="moba-setup-notice">{notice}</p> : null}
@@ -100,9 +100,9 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
               <button
                 key={tool.toolkit}
                 type="button"
-                className={`moba-setup-card${tool.requested ? ' is-requested' : ''}`}
-                disabled={linked || busy === tool.toolkit}
-                aria-label={linked ? `${label} conectado` : `Conectar ${label}`}
+                className={`moba-setup-card${tool.requested ? ' is-requested' : ''}${linked ? ' is-linked' : ''}`}
+                disabled={busy === tool.toolkit}
+                aria-label={linked ? `Trocar ${label}` : `Conectar ${label}`}
                 onClick={() => connect(tool.toolkit)}
               >
                 <span className="moba-setup-icon">
@@ -110,10 +110,10 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
                 </span>
                 <span className="moba-setup-copy">
                   <strong>{label}</strong>
-                  <span>{tool.description}</span>
+                  <span>{linked && tool.account ? tool.account : tool.description}</span>
                 </span>
                 <span className="moba-setup-action" aria-hidden="true">
-                  {linked ? <CheckIcon /> : <PlusIcon />}
+                  {linked ? 'Trocar' : <PlusIcon />}
                 </span>
               </button>
             )
@@ -135,10 +135,3 @@ function PlusIcon() {
   )
 }
 
-function CheckIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4.5 10.5 8.2 14 15.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
