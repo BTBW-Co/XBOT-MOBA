@@ -307,11 +307,24 @@ function injectFullscreenCss() {
       flex-shrink: 0;
     }
     body.moba-fullscreen .moba-operator-name {
+      margin: 0;
+      border: 0;
+      background: transparent;
+      padding: 4px 6px;
+      border-radius: 8px;
       font: 500 13px/1.2 "DM Sans", ui-sans-serif, system-ui, sans-serif;
       color: #1c1c1c;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    body.moba-fullscreen button.moba-operator-name {
+      cursor: pointer;
+    }
+    body.moba-fullscreen button.moba-operator-name:hover,
+    body.moba-fullscreen button.moba-operator-name[aria-expanded="true"] {
+      background: #f3f1ee;
     }
     body.moba-fullscreen .xbot-moba-brand-logo {
       flex-shrink: 0;
@@ -1695,10 +1708,11 @@ function bindInviteDismiss() {
   })
 }
 
-/** Ícone à esquerda do nome. O popover copia o link /invite/{código}. */
-function renderInviteShare(chip, nameEl, inviteUrl, locale) {
+/** Ícone à esquerda do avatar. O popover copia o link /invite/{código}. */
+function renderInviteShare(chip, inviteUrl, locale) {
   const url = readInviteUrl({ invite_url: inviteUrl })
   const anchor = chip.closest('.xbot-header') || chip
+  const avatar = chip.querySelector('.moba-operator-avatar')
   let button = chip.querySelector('.moba-invite-share')
   let popover = anchor.querySelector('.moba-invite-popover')
   if (!url) {
@@ -1713,7 +1727,8 @@ function renderInviteShare(chip, nameEl, inviteUrl, locale) {
     button.innerHTML = SHARE_ICON
     button.setAttribute('aria-haspopup', 'dialog')
     button.setAttribute('aria-expanded', 'false')
-    nameEl.before(button)
+    if (avatar) avatar.before(button)
+    else chip.prepend(button)
     popover = document.createElement('div')
     popover.className = 'moba-invite-popover'
     popover.setAttribute('hidden', '')
@@ -1771,6 +1786,8 @@ function renderInviteShare(chip, nameEl, inviteUrl, locale) {
       }
       if (legacy) mark()
     })
+  } else if (avatar && button.nextElementSibling !== avatar) {
+    avatar.before(button)
   }
   const label = tLocale(locale, 'shareInvite')
   button.dataset.url = url
@@ -1793,6 +1810,59 @@ function renderInviteShare(chip, nameEl, inviteUrl, locale) {
   }
 }
 
+function readSetupToken(identity) {
+  const token = String(identity?.setup_token || '').trim()
+  if (!/^[A-Za-z0-9_-]{8,80}$/.test(token)) return ''
+  return token
+}
+
+function onOperatorNameClick(event) {
+  event.preventDefault()
+  event.stopPropagation()
+  const button = event.currentTarget
+  const token = button.dataset.setupToken || ''
+  if (!token) return
+  const open = button.getAttribute('aria-expanded') === 'true'
+  document.querySelectorAll('.moba-invite-popover').forEach((node) => node.setAttribute('hidden', ''))
+  document.querySelectorAll('.moba-invite-share').forEach((node) => node.setAttribute('aria-expanded', 'false'))
+  const anchor = button.closest('.xbot-header') || button
+  const rect = anchor.getBoundingClientRect()
+  window.dispatchEvent(new CustomEvent('moba-setup-toggle', {
+    detail: {
+      token: open ? '' : token,
+      top: rect.bottom + 10,
+      right: Math.max(12, window.innerWidth - rect.right),
+      width: Math.min(420, Math.max(280, rect.width)),
+    },
+  }))
+  button.setAttribute('aria-expanded', open ? 'false' : 'true')
+}
+
+function renderOperatorName(chip, label, setupToken, locale) {
+  const clickable = Boolean(setupToken)
+  let name = chip.querySelector('.moba-operator-name')
+  if (name && clickable !== (name.tagName === 'BUTTON')) {
+    name.remove()
+    name = null
+  }
+  if (!name) {
+    name = document.createElement(clickable ? 'button' : 'span')
+    name.className = 'moba-operator-name'
+    if (clickable) {
+      name.type = 'button'
+      name.setAttribute('aria-haspopup', 'dialog')
+      name.setAttribute('aria-expanded', 'false')
+      name.addEventListener('click', onOperatorNameClick)
+    }
+    chip.appendChild(name)
+  }
+  if (name.textContent !== label) name.textContent = label
+  if (!clickable) return name
+  name.dataset.setupToken = setupToken
+  name.title = tLocale(locale, 'accountSetup')
+  return name
+}
+
 /** Pessoa identificada no canto direito do header: conta de operador ou visitante do SMS. */
 function renderOperatorAccount(visitorIdentity, locale = 'pt') {
   const header = document.querySelector('.xbot-chatbox .xbot-header')
@@ -1807,17 +1877,14 @@ function renderOperatorAccount(visitorIdentity, locale = 'pt') {
     chip.className = 'moba-operator'
     const avatar = document.createElement('span')
     avatar.className = 'moba-operator-avatar'
-    const name = document.createElement('span')
-    name.className = 'moba-operator-name'
-    chip.append(avatar, name)
+    chip.appendChild(avatar)
     header.appendChild(chip)
   }
   if (title) chip.title = title
   const avatar = chip.querySelector('.moba-operator-avatar')
-  const name = chip.querySelector('.moba-operator-name')
   if (avatar) avatar.textContent = avatarInitial(label)
-  if (name && name.textContent !== label) name.textContent = label
-  if (name) renderInviteShare(chip, name, visitorIdentity?.invite_url, locale)
+  const name = renderOperatorName(chip, label, readSetupToken(visitorIdentity), locale)
+  renderInviteShare(chip, visitorIdentity?.invite_url, locale)
   return true
 }
 
@@ -1899,6 +1966,7 @@ export async function mountXChatFromBootstrap(bootstrap, { locale = 'pt', person
           email: session.email,
           phone: session.phone,
           invite_url: session.invite_url || '',
+          setup_token: session.setup_token || '',
         }) || visitorIdentity
       }
     } catch {

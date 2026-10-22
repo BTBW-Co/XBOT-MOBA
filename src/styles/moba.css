@@ -873,6 +873,43 @@ body.moba-has-bg .moba-boot {
   background: #fff;
 }
 
+.moba-setup-popover {
+  position: fixed;
+  z-index: 2147483600;
+  box-sizing: border-box;
+  max-width: calc(100vw - 24px);
+  max-height: min(640px, calc(100vh - 96px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: #fff;
+  border: 1px solid #e6e2dc;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(22, 22, 20, 0.16);
+}
+
+.moba-setup-popover .moba-setup {
+  max-width: none;
+  margin: 0;
+  padding: 16px 20px 14px 14px;
+}
+
+.moba-setup-popover .moba-setup-kicker {
+  font-size: 11px;
+}
+
+.moba-setup-popover .moba-setup h1 {
+  font-size: 18px;
+}
+
+.moba-setup-popover .moba-setup-section {
+  margin-top: 16px;
+}
+
+.moba-setup-popover .moba-setup-grid {
+  grid-template-columns: 1fr;
+}
+
 .moba-setup {
   max-width: 760px;
   margin: 0 auto;
@@ -931,6 +968,8 @@ body.moba-has-bg .moba-boot {
   align-items: center;
   gap: 12px;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 8px;
   border: 0;
   border-radius: 16px;

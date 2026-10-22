@@ -48,6 +48,11 @@ export function rememberVisitorProfile(patch) {
       if (invite) next.invite_url = invite
       else delete next.invite_url
     }
+    if (Object.prototype.hasOwnProperty.call(patch || {}, 'setup_token')) {
+      const token = String(patch.setup_token || '').trim()
+      if (token) next.setup_token = token
+      else delete next.setup_token
+    }
     writeStored(JSON.stringify(next))
     return next
   } catch {

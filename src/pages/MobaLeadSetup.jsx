@@ -12,7 +12,7 @@ const ICONS = {
   outlook: '/icons/outlook.svg',
 }
 
-export default function MobaLeadSetup({ token: tokenProp, onClose }) {
+export default function MobaLeadSetup({ token: tokenProp, onClose, compact = false }) {
   const params = useParams()
   const token = tokenProp || params.token
   const [searchParams] = useSearchParams()
@@ -121,7 +121,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
         </div>
       </section>
       <button type="button" className="moba-setup-back" onClick={goBack}>
-        Voltar à conversa
+        {compact ? 'Fechar' : 'Voltar à conversa'}
       </button>
     </main>
   )

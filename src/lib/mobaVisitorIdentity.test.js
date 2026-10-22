@@ -48,6 +48,10 @@ test('phone login keeps the person on the credential and shows the name', () => 
   assert.equal(readVisitorIdentity().invite_url, 'https://moba.xbotone.com/invite/k7m2qx')
   rememberVisitorProfile({ invite_url: '' })
   assert.equal(readVisitorIdentity().invite_url, undefined)
+  rememberVisitorProfile({ setup_token: 'abc_def-12' })
+  assert.equal(readVisitorIdentity().setup_token, 'abc_def-12')
+  rememberVisitorProfile({ setup_token: '' })
+  assert.equal(readVisitorIdentity().setup_token, undefined)
 })
 
 test('server rejection clears even an expired identity and asks for login again', async () => {
