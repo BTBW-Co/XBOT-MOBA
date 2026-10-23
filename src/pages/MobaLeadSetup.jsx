@@ -211,7 +211,10 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
         <button type="button" className="moba-workspace-iconbtn" aria-label={menu ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenu((open) => !open)}>
           {menu ? '×' : '☰'}
         </button>
-        <strong>Xbot</strong>
+        <span className="moba-workspace-brand">
+          <span className="moba-workspace-brand-mark">xbot</span>
+          <span className="moba-workspace-brand-product">MOBA</span>
+        </span>
         <span />
       </header>
       {menu ? (

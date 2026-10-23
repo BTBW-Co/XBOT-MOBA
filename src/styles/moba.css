@@ -1131,10 +1131,29 @@ body.moba-has-bg .moba-boot {
   margin-bottom: 18px;
 }
 
-.moba-workspace-bar strong {
-  text-align: center;
+.moba-workspace-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  color: #1a1a18;
+}
+
+.moba-workspace-brand-mark {
+  font-family: 'Geom', sans-serif;
+  font-optical-sizing: auto;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.moba-workspace-brand-product {
+  font-family: 'Josefin Sans', sans-serif;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.06em;
 }
 
 .moba-workspace-iconbtn,
