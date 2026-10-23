@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { completeLeadConnect, connectLeadMeea, fetchLeadSetup, startLeadConnect } from '../api/moba'
-import { storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
+import { completeLeadConnect, connectLeadMeea, deleteLeadAccount, fetchLeadSetup, startLeadConnect } from '../api/moba'
+import { clearVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 
 const ICONS = {
   gmail: '/icons/gmail.svg',
@@ -38,6 +38,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   const [menu, setMenu] = useState(false)
   const [section, setSection] = useState('workspace')
   const [copied, setCopied] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [meeaKey, setMeeaKey] = useState('')
   const [meeaOpen, setMeeaOpen] = useState(false)
 
@@ -132,6 +133,19 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
     }
   }
 
+  async function removeAccount() {
+    setBusy('delete')
+    setError('')
+    try {
+      await deleteLeadAccount(token)
+      clearVisitorIdentity()
+      window.location.assign('/')
+    } catch (err) {
+      setError(err?.message || 'Não consegui apagar a conta.')
+      setBusy('')
+    }
+  }
+
   function goBack() {
     if (onClose) {
       onClose()
@@ -173,18 +187,20 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   if (!narrow) {
     return (
       <main className="moba-workspace moba-workspace-gate">
-        <h1>Abra no celular</h1>
-        <p>Esta conta é do lead neste telefone. O workspace, o convite e as pessoas ficam só no celular.</p>
+        <h1>Continue no celular</h1>
+        <p>Esta conta abre por um destes canais. O workspace fica no telefone.</p>
         <button
           type="button"
           className="moba-workspace-primary"
-          onClick={() => {
-            if (view?.whatsapp_url) window.location.assign(view.whatsapp_url)
-            else goBack()
-          }}
+          disabled={!view?.whatsapp_url}
+          onClick={() => window.location.assign(view.whatsapp_url)}
         >
-          {view?.whatsapp_url ? 'Abrir no WhatsApp' : 'Voltar'}
+          WhatsApp
         </button>
+        <button type="button" className="moba-workspace-primary is-blocked" disabled>
+          iMessage
+        </button>
+        <p className="moba-workspace-help">O iMessage ainda não envia.</p>
       </main>
     )
   }
@@ -338,6 +354,26 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
           <h2>WhatsApp</h2>
           <p className="moba-workspace-help">O número por onde esta pessoa fala com o Xbot.</p>
           <Row title={phone ? 'Conectado' : 'Ainda sem número'} detail={phone} />
+          <h2>Conta</h2>
+          <p className="moba-workspace-help">Apaga esta conta e os dados ligados a ela.</p>
+          <div className="moba-workspace-row">
+            <div>
+              <strong>Excluir conta</strong>
+              <span>
+                {confirmDelete
+                  ? 'Isso não volta. Saem o lead, as contas ligadas e a conversa deste telefone.'
+                  : 'Some o lead e o que está ligado a este telefone.'}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="moba-workspace-danger"
+              disabled={busy === 'delete'}
+              onClick={() => (confirmDelete ? removeAccount() : setConfirmDelete(true))}
+            >
+              {busy === 'delete' ? 'Apagando' : confirmDelete ? 'Apagar' : 'Excluir'}
+            </button>
+          </div>
         </section>
       ) : null}
     </main>

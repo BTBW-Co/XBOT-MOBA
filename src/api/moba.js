@@ -172,6 +172,10 @@ export function connectLeadMeea(token, apiKey) {
   return postOnboarding(`setup/${encodeURIComponent(token)}/meea`, { api_key: apiKey })
 }
 
+export function deleteLeadAccount(token) {
+  return postOnboarding(`setup/${encodeURIComponent(token)}/delete`, {})
+}
+
 export function completeLeadConnect(token, toolkit, { returnTo, bundle } = {}) {
   const body = { toolkit }
   if (returnTo) body.return_to = returnTo

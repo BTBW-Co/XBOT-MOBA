@@ -1282,8 +1282,20 @@ body.moba-has-bg .moba-boot {
   padding: 14px 16px;
 }
 
-.moba-workspace-primary:disabled {
+.moba-workspace-primary:disabled,
+.moba-workspace-primary.is-blocked {
   opacity: 0.45;
+  cursor: default;
+}
+
+.moba-workspace-danger {
+  flex: none;
+  border: 1px solid #e7b4b4;
+  border-radius: 10px;
+  background: #fff;
+  color: #b42318;
+  font: inherit;
+  padding: 8px 12px;
 }
 
 .moba-workspace-link {

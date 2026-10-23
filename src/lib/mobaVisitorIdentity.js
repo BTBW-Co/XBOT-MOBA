@@ -34,6 +34,10 @@ export function readVisitorIdentity() {
     return value
   } catch { return null }
 }
+export function clearVisitorIdentity() {
+  clearStored()
+}
+
 export function storeVisitorIdentity(data, objectRef) {
   const seconds = Number(data?.expires_in)
   const expiresAt = Number.isFinite(seconds) && seconds < 0 ? 0 : null
