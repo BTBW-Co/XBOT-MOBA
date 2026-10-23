@@ -6,22 +6,45 @@ import { storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 const ICONS = {
   gmail: '/icons/gmail.svg',
   googledrive: '/icons/google-drive.svg',
+  googledocs: '/icons/google-docs.svg',
+  googlesheets: '/icons/google-sheets.svg',
+  googleslides: '/icons/google-slides.svg',
+  googletasks: '/icons/google-tasks.svg',
   exist: '/icons/health.svg',
   github: '/icons/github.svg',
   googlecalendar: '/icons/google-calendar.svg',
   outlook: '/icons/outlook.svg',
 }
 
-export default function MobaLeadSetup({ token: tokenProp, onClose, compact = false }) {
+const GOOGLE = ['gmail', 'googlecalendar', 'googledrive', 'googledocs', 'googlesheets', 'googleslides', 'googletasks']
+const SINGLES = [
+  { toolkit: 'outlook', label: 'Outlook', blurb: 'Ler, buscar e organizar o e-mail do Outlook.' },
+  { toolkit: 'github', label: 'GitHub', blurb: 'PRs, issues e publicações.' },
+  { toolkit: 'exist', label: 'Health', blurb: 'Dados de saúde deste telefone.' },
+]
+
+export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   const params = useParams()
   const token = tokenProp || params.token
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const fromWhatsapp = !onClose && searchParams.get('from') === 'whatsapp'
+  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 820px)').matches)
   const [view, setView] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState('')
+  const [menu, setMenu] = useState(false)
+  const [section, setSection] = useState('workspace')
+  const [copied, setCopied] = useState('')
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 820px)')
+    const apply = () => setNarrow(query.matches)
+    apply()
+    query.addEventListener('change', apply)
+    return () => query.removeEventListener('change', apply)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -35,11 +58,20 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
           storeVisitorIdentity(data.session, 'personal')
         }
         if (searchParams.get('done') === '1') {
-          const toolkit = data?.toolkit || 'googlecalendar'
-          const result = await completeLeadConnect(token, toolkit)
+          const toolkit = searchParams.get('toolkit') || data?.toolkit || 'gmail'
+          const result = await completeLeadConnect(token, toolkit, {
+            bundle: searchParams.get('bundle') === '1',
+            returnTo: searchParams.get('from') === 'whatsapp' ? 'whatsapp' : undefined,
+          })
           if (cancelled) return
-          if (result?.ok) setNotice(result.message || 'Conta ligada.')
-          else setError(result?.message || 'A conta ainda não apareceu.')
+          if (result?.redirect_url) {
+            window.location.assign(result.redirect_url)
+            return
+          }
+          if (result?.ok) {
+            setNotice(result.message || 'Conta ligada.')
+            setSection('connected')
+          } else setError(result?.message || 'A conta ainda não apareceu.')
           const fresh = await fetchLeadSetup(token).catch(() => data)
           if (!cancelled) setView(fresh)
         }
@@ -76,55 +108,194 @@ export default function MobaLeadSetup({ token: tokenProp, onClose, compact = fal
       onClose()
       return
     }
-    if (fromWhatsapp) {
+    if (fromWhatsapp || section === 'connected') {
       window.location.assign(view?.whatsapp_url || 'whatsapp://')
       return
     }
     navigate('/')
   }
 
+  function openSection(next) {
+    setSection(next)
+    setMenu(false)
+    setCopied('')
+  }
+
+  async function copyText(value, key) {
+    const text = String(value || '').trim()
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(key)
+    } catch {
+      setCopied('')
+    }
+  }
+
+  const tools = view?.tools || []
+  const bySlug = Object.fromEntries(tools.map((tool) => [tool.toolkit, tool]))
+  const googleTools = GOOGLE.map((slug) => bySlug[slug]).filter(Boolean)
+  const googleAccount = googleTools.map((tool) => accountLine(tool)).find(Boolean) || ''
+  const googleOn = googleTools.some((tool) => tool.status === 'connected')
+  const phone = formatPhone(view?.phone)
+  const line = formatPhone(view?.xbot_phone)
+  const displayName = view?.full_name || view?.name || ''
+
+  if (!narrow) {
+    return (
+      <main className="moba-workspace moba-workspace-gate">
+        <h1>Abra no celular</h1>
+        <p>Esta conta é do lead neste telefone. O workspace, o convite e as pessoas ficam só no celular.</p>
+        <button
+          type="button"
+          className="moba-workspace-primary"
+          onClick={() => {
+            if (view?.whatsapp_url) window.location.assign(view.whatsapp_url)
+            else goBack()
+          }}
+        >
+          {view?.whatsapp_url ? 'Abrir no WhatsApp' : 'Voltar'}
+        </button>
+      </main>
+    )
+  }
+
   return (
-    <main className="moba-setup">
-      <p className="moba-setup-kicker">Conta deste telefone</p>
-      <h1>{view?.name ? `${view.name}, ligue ou troque a conta` : 'Ligue ou troque a conta'}</h1>
-      <p className="moba-setup-lead">Estas contas ficam vinculadas a essa conta.</p>
+    <main className="moba-workspace">
+      <header className="moba-workspace-bar">
+        <button type="button" className="moba-workspace-iconbtn" aria-label={menu ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenu((open) => !open)}>
+          {menu ? '×' : '☰'}
+        </button>
+        <strong>Xbot</strong>
+        <span />
+      </header>
+      {menu ? (
+        <nav className="moba-workspace-menu" aria-label="Conta deste telefone">
+          <button type="button" onClick={() => openSection('workspace')}>Workspace</button>
+          <button type="button" onClick={() => openSection('people')}>Pessoas de confiança</button>
+          <button type="button" onClick={() => openSection('preferences')}>Preferências</button>
+          <button type="button" onClick={() => openSection('invite')}>Convidar</button>
+          <button type="button" onClick={goBack}>Voltar à conversa</button>
+          {displayName ? <p className="moba-workspace-who">{displayName}</p> : null}
+          {phone ? <p className="moba-workspace-who">{phone}</p> : null}
+        </nav>
+      ) : null}
       {error ? <p className="moba-setup-error">{error}</p> : null}
-      {notice ? <p className="moba-setup-notice">{notice}</p> : null}
-      <section className="moba-setup-section" aria-labelledby="moba-setup-heading">
-        <h2 id="moba-setup-heading">Contas</h2>
-        <div className="moba-setup-grid">
-          {(view?.tools || []).map((tool) => {
-            const linked = tool.status === 'connected'
-            const label = tool.label
-            const account = accountLine(tool)
-            return (
-              <button
-                key={tool.toolkit}
-                type="button"
-                className={`moba-setup-card${tool.requested ? ' is-requested' : ''}${linked ? ' is-linked' : ''}`}
-                disabled={busy === tool.toolkit}
-                aria-label={linked ? `Trocar ${label}` : `Conectar ${label}`}
-                onClick={() => connect(tool.toolkit)}
-              >
-                <span className="moba-setup-icon">
-                  <img src={ICONS[tool.toolkit]} alt="" />
+      {menu ? null : section === 'connected' ? (
+        <section className="moba-workspace-hero">
+          <h1>Conta ligada neste telefone.</h1>
+          {notice ? <p>{notice}</p> : null}
+          <button type="button" className="moba-workspace-primary" onClick={goBack}>Voltar ao WhatsApp</button>
+          <button type="button" className="moba-workspace-link" onClick={() => openSection('workspace')}>Abrir a conta</button>
+        </section>
+      ) : null}
+      {!menu && section === 'workspace' ? (
+        <>
+          <section className="moba-workspace-block">
+            <h2>Contato</h2>
+            <p className="moba-workspace-help">Por onde este telefone fala com o Xbot.</p>
+            <Row
+              title="WhatsApp"
+              detail={line || 'Linha do Xbot'}
+              action="Abrir"
+              onAction={() => window.location.assign(view?.whatsapp_url || 'whatsapp://')}
+            />
+            <Row title="Este telefone" detail={phone || 'Telefone do lead'} />
+          </section>
+          <section className="moba-workspace-block">
+            <h2>Conectores</h2>
+            <p className="moba-workspace-help">Contas que o assistente deste lead pode usar. Ficam neste telefone.</p>
+            <article className="moba-workspace-connector">
+              <div>
+                <strong>Google</strong>
+                <p>Gmail, agenda, tarefas, Drive, Docs, planilhas e apresentações.</p>
+                {googleAccount ? <p className="moba-workspace-account">{googleAccount}</p> : null}
+                <span className="moba-workspace-marks">
+                  {googleTools.filter((tool) => tool.status === 'connected').map((tool) => (
+                    <img key={tool.toolkit} src={ICONS[tool.toolkit]} alt="" />
+                  ))}
                 </span>
-                <span className="moba-setup-copy">
-                  <strong>{label}</strong>
-                  <span>{linked && account ? account : tool.description}</span>
-                </span>
-                <span className="moba-setup-action" aria-hidden="true">
-                  {linked ? 'Trocar' : <PlusIcon />}
-                </span>
+              </div>
+              <button type="button" disabled={busy === 'gmail'} onClick={() => connect('gmail')}>
+                {googleOn ? 'Trocar' : 'Adicionar conta'}
               </button>
-            )
-          })}
-        </div>
-      </section>
-      <button type="button" className="moba-setup-back" onClick={goBack}>
-        {compact ? 'Fechar' : 'Voltar à conversa'}
-      </button>
+            </article>
+            {SINGLES.map((item) => {
+              const tool = bySlug[item.toolkit]
+              const linked = tool?.status === 'connected'
+              return (
+                <article key={item.toolkit} className="moba-workspace-connector">
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{linked && accountLine(tool) ? accountLine(tool) : item.blurb}</p>
+                  </div>
+                  <button type="button" disabled={busy === item.toolkit} onClick={() => connect(item.toolkit)}>
+                    {linked ? 'Trocar' : 'Conectar'}
+                  </button>
+                </article>
+              )
+            })}
+          </section>
+        </>
+      ) : null}
+      {!menu && section === 'people' ? (
+        <section className="moba-workspace-block">
+          <h2>Seu link</h2>
+          <p className="moba-workspace-help">Convide alguém de confiança. O assistente dela só alcança o seu quando os dois aceitam.</p>
+          <div className="moba-workspace-linkrow">
+            <span>{view?.invite_url || 'O convite aparece quando esta pessoa está no cadastro.'}</span>
+            {view?.invite_url ? (
+              <button type="button" onClick={() => copyText(view.invite_url, 'people')}>{copied === 'people' ? 'Copiado' : 'Copiar'}</button>
+            ) : null}
+          </div>
+          <h2>Pessoas</h2>
+          {(view?.people || []).length ? (
+            <ul className="moba-workspace-list">
+              {view.people.map((name) => <li key={name}>{name}</li>)}
+            </ul>
+          ) : (
+            <p className="moba-workspace-empty">Ninguém ligado ainda.</p>
+          )}
+        </section>
+      ) : null}
+      {!menu && section === 'invite' ? (
+        <section className="moba-workspace-block">
+          <h1>Convidar</h1>
+          <p>O mesmo link serve para mais de uma pessoa. A vaga conta quando alguém entra.</p>
+          <p>{view?.invites_used || 0} de {view?.invite_quota || 0} convites usados.</p>
+          {view?.invite_open ? null : <p>O link passa a aceitar gente quando as ferramentas desta pessoa forem liberadas e ainda houver vaga.</p>}
+          {view?.invite_url ? <p className="moba-workspace-url">{view.invite_url}</p> : null}
+          <button type="button" className="moba-workspace-primary" disabled={!view?.invite_url} onClick={() => copyText(view?.invite_url, 'invite')}>
+            {copied === 'invite' ? 'Link copiado' : 'Copiar convite'}
+          </button>
+        </section>
+      ) : null}
+      {!menu && section === 'preferences' ? (
+        <section className="moba-workspace-block">
+          <h2>Nome</h2>
+          <p className="moba-workspace-help">O nome deste lead no Xbot.</p>
+          <p className="moba-workspace-field">{displayName || 'Sem nome'}</p>
+          <h2>Entrada</h2>
+          <p className="moba-workspace-help">O telefone identifica a pessoa. Não é uma senha de computador.</p>
+          <Row title="Telefone" detail={phone || 'Sem telefone'} />
+          <h2>WhatsApp</h2>
+          <p className="moba-workspace-help">O número por onde esta pessoa fala com o Xbot.</p>
+          <Row title={phone ? 'Conectado' : 'Ainda sem número'} detail={phone} />
+        </section>
+      ) : null}
     </main>
+  )
+}
+
+function Row({ title, detail, action, onAction }) {
+  return (
+    <div className="moba-workspace-row">
+      <div>
+        <strong>{title}</strong>
+        {detail ? <span>{detail}</span> : null}
+      </div>
+      {action ? <button type="button" onClick={onAction}>{action}</button> : null}
+    </div>
   )
 }
 
@@ -135,11 +306,13 @@ function accountLine(tool) {
   return account
 }
 
-function PlusIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
+function formatPhone(raw) {
+  const digits = String(raw || '').replace(/\D/g, '')
+  if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+    const ddd = digits.slice(2, 4)
+    const rest = digits.slice(4)
+    if (rest.length === 9) return `+55 ${ddd} ${rest.slice(0, 5)}-${rest.slice(5)}`
+    if (rest.length === 8) return `+55 ${ddd} ${rest.slice(0, 4)}-${rest.slice(4)}`
+  }
+  return digits ? `+${digits}` : ''
 }
-

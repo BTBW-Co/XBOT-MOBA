@@ -168,8 +168,11 @@ export function startLeadConnect(token, toolkit, { returnTo } = {}) {
   return postOnboarding(`setup/${encodeURIComponent(token)}/connect`, body)
 }
 
-export function completeLeadConnect(token, toolkit) {
-  return postOnboarding(`setup/${encodeURIComponent(token)}/complete`, { toolkit })
+export function completeLeadConnect(token, toolkit, { returnTo, bundle } = {}) {
+  const body = { toolkit }
+  if (returnTo) body.return_to = returnTo
+  if (bundle) body.bundle = true
+  return postOnboarding(`setup/${encodeURIComponent(token)}/complete`, body)
 }
 
 export async function fetchCurrentTerm() {

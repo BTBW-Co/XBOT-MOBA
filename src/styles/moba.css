@@ -1092,6 +1092,202 @@ body.moba-has-bg .moba-boot {
   border: 0;
 }
 
+.moba-workspace {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
+  color: #1c1c1c;
+}
+
+.moba-workspace-gate {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.moba-workspace-gate h1,
+.moba-workspace h1,
+.moba-workspace h2 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.moba-workspace-gate p,
+.moba-workspace-help {
+  color: #5c5c5c;
+  line-height: 1.45;
+}
+
+.moba-workspace-bar {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  min-height: 48px;
+  margin-bottom: 18px;
+}
+
+.moba-workspace-bar strong {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.moba-workspace-iconbtn,
+.moba-workspace-row button,
+.moba-workspace-connector button,
+.moba-workspace-linkrow button,
+.moba-workspace-link {
+  border: 0;
+  background: transparent;
+  color: #1c1c1c;
+  font: inherit;
+}
+
+.moba-workspace-iconbtn {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+.moba-workspace-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 12px 4px 24px;
+}
+
+.moba-workspace-menu button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 22px;
+}
+
+.moba-workspace-who {
+  margin: 0;
+  color: #8a8a8a;
+}
+
+.moba-workspace-block {
+  margin-top: 8px;
+}
+
+.moba-workspace-block h2 {
+  margin-top: 28px;
+  font-size: 22px;
+}
+
+.moba-workspace-block h2:first-child,
+.moba-workspace h1 {
+  margin-top: 8px;
+  font-size: 28px;
+}
+
+.moba-workspace-row,
+.moba-workspace-connector,
+.moba-workspace-linkrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid #e6e6e6;
+}
+
+.moba-workspace-row strong,
+.moba-workspace-connector strong,
+.moba-workspace-row span,
+.moba-workspace-connector p,
+.moba-workspace-linkrow span {
+  display: block;
+}
+
+.moba-workspace-row span,
+.moba-workspace-connector p,
+.moba-workspace-linkrow span,
+.moba-workspace-account,
+.moba-workspace-empty,
+.moba-workspace-url {
+  color: #5c5c5c;
+  line-height: 1.4;
+}
+
+.moba-workspace-row button,
+.moba-workspace-connector button,
+.moba-workspace-linkrow button {
+  flex: none;
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.moba-workspace-marks {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.moba-workspace-marks img {
+  width: 18px;
+  height: 18px;
+}
+
+.moba-workspace-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moba-workspace-list li {
+  padding: 12px 0;
+  border-top: 1px solid #e6e6e6;
+}
+
+.moba-workspace-field {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f6f4f1;
+}
+
+.moba-workspace-primary {
+  display: block;
+  width: 100%;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 12px;
+  background: #1c1c1c;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  padding: 14px 16px;
+}
+
+.moba-workspace-primary:disabled {
+  opacity: 0.45;
+}
+
+.moba-workspace-link {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  text-align: center;
+  text-decoration: underline;
+}
+
+.moba-workspace-hero {
+  min-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .moba-error-aura,
   .moba-error-ring,
