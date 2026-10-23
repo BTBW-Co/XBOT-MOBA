@@ -95,13 +95,15 @@ async function postOnboarding(path, body) {
   return data
 }
 
-export function startPhoneChallenge({ phone, locale, objectId, pin, turnstileToken }) {
+export function startPhoneChallenge({ phone, locale, objectId, pin, turnstileToken, channel, inviteSlug }) {
   return postOnboarding('phone', {
     phone,
     locale: locale || null,
     object_id: objectId || null,
     pin: pin || null,
     turnstile_token: turnstileToken || null,
+    channel: channel === 'whatsapp' ? 'whatsapp' : 'sms',
+    invite_slug: inviteSlug || null,
   })
 }
 

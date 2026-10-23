@@ -32,6 +32,8 @@ function errorText(locale, code) {
   if (code === 'invalid_phone') return copy(locale, 'phoneInvalid')
   if (code === 'rate_limited' || code === 'too_many') return copy(locale, 'phoneLimited')
   if (code === 'send_failed') return copy(locale, 'phoneSendFailed')
+  if (code === 'whatsapp_failed') return copy(locale, 'phoneWhatsappFailed')
+  if (code === 'whatsapp_unavailable') return copy(locale, 'phoneWhatsappUnavailable')
   if (code === 'expired') return copy(locale, 'codeExpired')
   if (code === 'invalid_code') return copy(locale, 'codeInvalid')
   if (code === 'invalid_profile') return copy(locale, 'profileInvalid')
@@ -114,6 +116,8 @@ export default function MobaPhoneHome() {
   const [profile, setProfile] = useState({ givenName: '', familyName: '', gender: '', email: '' })
   const [invite, setInvite] = useState(null)
   const [channelNote, setChannelNote] = useState('')
+  const [deliveryChannel, setDeliveryChannel] = useState('sms')
+  const [sendingChannel, setSendingChannel] = useState('')
   const codeRefs = useRef([])
 
   useEffect(() => {
@@ -190,8 +194,9 @@ export default function MobaPhoneHome() {
     }
   }
 
-  async function sendCode(nextPhone, token = turnstileToken) {
+  async function sendCode(nextPhone, token = turnstileToken, channel = 'sms') {
     setLoading(true)
+    setSendingChannel(channel === 'whatsapp' ? 'whatsapp' : 'sms')
     setError('')
     try {
       await startPhoneChallenge({
@@ -200,18 +205,23 @@ export default function MobaPhoneHome() {
         objectId: explicitObject || null,
         pin,
         turnstileToken: token,
+        channel,
+        inviteSlug: inviteSlug && !invite?.missing ? inviteSlug : null,
       })
+      setDeliveryChannel(channel === 'whatsapp' ? 'whatsapp' : 'sms')
       setPhone(nextPhone)
       setDigits(Array(CODE_LENGTH).fill(''))
       setPhase('code')
     } catch (err) {
-      setError(errorText(locale, err?.detail) || copy(locale, 'phoneSendFailed'))
+      const fallback = channel === 'whatsapp' ? copy(locale, 'phoneWhatsappFailed') : copy(locale, 'phoneSendFailed')
+      setError(errorText(locale, err?.detail) || fallback)
     } finally {
       setLoading(false)
+      setSendingChannel('')
     }
   }
 
-  async function submitPhone(event) {
+  async function submitPhone(event, channel = 'sms') {
     event.preventDefault()
     if (!canSubmitPhone(phoneField.digits, phoneField.iso, phoneField.pending)) {
       setError(copy(locale, 'phoneInvalid'))
@@ -222,7 +232,7 @@ export default function MobaPhoneHome() {
       setError(copy(locale, 'humanRequired'))
       return
     }
-    await sendCode(resolved.e164, turnstileToken)
+    await sendCode(resolved.e164, turnstileToken, channel)
   }
 
   async function submitCode(code) {
@@ -360,7 +370,7 @@ export default function MobaPhoneHome() {
     phase === 'phone'
       ? copy(locale, 'phoneSubtitle')
       : phase === 'code'
-        ? copy(locale, 'codeSubtitle', { phone })
+        ? copy(locale, 'codeSubtitle', { phone, channel: deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })
         : phase === 'channel'
           ? copy(locale, 'channelSubtitle')
           : copy(locale, 'profileSubtitle')
@@ -386,7 +396,7 @@ export default function MobaPhoneHome() {
         <p className="moba-gate-sub">{subtitle}</p>
 
         {phase === 'phone' ? (
-          <form className="moba-gate-form" onSubmit={submitPhone}>
+          <form className="moba-gate-form" onSubmit={(event) => submitPhone(event, 'sms')}>
             <label className="moba-gate-label" htmlFor="moba-national">
               {copy(locale, 'phoneLabel')}
             </label>
@@ -422,8 +432,16 @@ export default function MobaPhoneHome() {
             />
             {error ? <p className="moba-gate-error">{error}</p> : null}
             <button className="moba-gate-submit" type="submit" disabled={loading || !turnstileToken || !phoneReady}>
-              {loading ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
-              {loading ? null : <span aria-hidden="true"> →</span>}
+              {sendingChannel === 'sms' ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
+              {sendingChannel === 'sms' ? null : <span aria-hidden="true"> →</span>}
+            </button>
+            <button
+              className="moba-gate-choice"
+              type="button"
+              disabled={loading || !turnstileToken || !phoneReady}
+              onClick={(event) => submitPhone(event, 'whatsapp')}
+            >
+              {sendingChannel === 'whatsapp' ? copy(locale, 'phoneSending') : copy(locale, 'phoneSendWhatsapp')}
             </button>
           </form>
         ) : phase === 'code' ? (
@@ -476,8 +494,11 @@ export default function MobaPhoneHome() {
               >
                 {copy(locale, 'changeNumber')}
               </button>
-              <button type="button" disabled={loading} onClick={() => void sendCode(phone)}>
+              <button type="button" disabled={loading} onClick={() => void sendCode(phone, turnstileToken, 'sms')}>
                 {copy(locale, 'resendCode')}
+              </button>
+              <button type="button" disabled={loading} onClick={() => void sendCode(phone, turnstileToken, 'whatsapp')}>
+                {copy(locale, 'resendWhatsapp')}
               </button>
             </div>
           </form>
