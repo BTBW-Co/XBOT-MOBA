@@ -95,6 +95,19 @@ async function postOnboarding(path, body) {
   return data
 }
 
+export function fetchPhoneOptions() {
+  const api = getApiBaseUrl()
+  return fetch(`${api}/v1/public/moba/phone/options`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  })
+    .then(async (res) => {
+      const data = await res.json().catch(() => ({}))
+      return res.ok && data?.whatsapp === true ? { whatsapp: true } : { whatsapp: false }
+    })
+    .catch(() => ({ whatsapp: false }))
+}
+
 export function startPhoneChallenge({ phone, locale, objectId, pin, turnstileToken, channel, inviteSlug }) {
   return postOnboarding('phone', {
     phone,

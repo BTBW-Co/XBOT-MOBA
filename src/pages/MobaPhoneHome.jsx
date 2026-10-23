@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import PhoneCountryField from '../components/PhoneCountryField'
 import TurnstileCheck from '../components/TurnstileCheck'
 import MobaBootLoader from '../components/MobaBootLoader'
-import { bootstrapMoba, choosePersonalChannel, fetchCurrentTerm, fetchInvite, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
+import { bootstrapMoba, choosePersonalChannel, fetchCurrentTerm, fetchInvite, fetchPhoneOptions, savePhoneProfile, startPhoneChallenge, verifyPhoneChallenge } from '../api/moba'
 import { mountXChatFromBootstrap } from '../xchat/mountXChat'
 import { getCountryCallingCode } from 'libphonenumber-js/min'
 import { canSubmitPhone, resolvePhone, suggestIso } from '../lib/phoneInput'
@@ -117,6 +117,7 @@ export default function MobaPhoneHome() {
   const [invite, setInvite] = useState(null)
   const [channelNote, setChannelNote] = useState('')
   const [deliveryChannel, setDeliveryChannel] = useState('sms')
+  const [whatsappReady, setWhatsappReady] = useState(false)
   const [sendingChannel, setSendingChannel] = useState('')
   const codeRefs = useRef([])
 
@@ -139,6 +140,16 @@ export default function MobaPhoneHome() {
     }
     setReady(true)
   }, [navigate, objectRef, personal])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchPhoneOptions().then((data) => {
+      if (!cancelled) setWhatsappReady(data.whatsapp === true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!inviteSlug) return
@@ -368,7 +379,7 @@ export default function MobaPhoneHome() {
           : copy(locale, 'profileTitle')
   const subtitle =
     phase === 'phone'
-      ? copy(locale, 'phoneSubtitle')
+      ? copy(locale, whatsappReady ? 'phoneSubtitle' : 'phoneSubtitleSms')
       : phase === 'code'
         ? copy(locale, 'codeSubtitle', { phone, channel: deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })
         : phase === 'channel'
@@ -432,17 +443,21 @@ export default function MobaPhoneHome() {
             />
             {error ? <p className="moba-gate-error">{error}</p> : null}
             <button className="moba-gate-submit" type="submit" disabled={loading || !turnstileToken || !phoneReady}>
-              {sendingChannel === 'sms' ? copy(locale, 'phoneSending') : copy(locale, 'phoneSend')}
+              {sendingChannel === 'sms'
+                ? copy(locale, 'phoneSending')
+                : copy(locale, whatsappReady ? 'phoneSend' : 'phoneSendOnly')}
               {sendingChannel === 'sms' ? null : <span aria-hidden="true"> →</span>}
             </button>
-            <button
-              className="moba-gate-choice"
-              type="button"
-              disabled={loading || !turnstileToken || !phoneReady}
-              onClick={(event) => submitPhone(event, 'whatsapp')}
-            >
-              {sendingChannel === 'whatsapp' ? copy(locale, 'phoneSending') : copy(locale, 'phoneSendWhatsapp')}
-            </button>
+            {whatsappReady ? (
+              <button
+                className="moba-gate-choice"
+                type="button"
+                disabled={loading || !turnstileToken || !phoneReady}
+                onClick={(event) => submitPhone(event, 'whatsapp')}
+              >
+                {sendingChannel === 'whatsapp' ? copy(locale, 'phoneSending') : copy(locale, 'phoneSendWhatsapp')}
+              </button>
+            ) : null}
           </form>
         ) : phase === 'code' ? (
           <form
@@ -497,9 +512,11 @@ export default function MobaPhoneHome() {
               <button type="button" disabled={loading} onClick={() => void sendCode(phone, turnstileToken, 'sms')}>
                 {copy(locale, 'resendCode')}
               </button>
-              <button type="button" disabled={loading} onClick={() => void sendCode(phone, turnstileToken, 'whatsapp')}>
-                {copy(locale, 'resendWhatsapp')}
-              </button>
+              {whatsappReady ? (
+                <button type="button" disabled={loading} onClick={() => void sendCode(phone, turnstileToken, 'whatsapp')}>
+                  {copy(locale, 'resendWhatsapp')}
+                </button>
+              ) : null}
             </div>
           </form>
         ) : phase === 'channel' ? (
