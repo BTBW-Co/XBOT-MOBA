@@ -168,6 +168,10 @@ export function startLeadConnect(token, toolkit, { returnTo } = {}) {
   return postOnboarding(`setup/${encodeURIComponent(token)}/connect`, body)
 }
 
+export function connectLeadMeea(token, apiKey) {
+  return postOnboarding(`setup/${encodeURIComponent(token)}/meea`, { api_key: apiKey })
+}
+
 export function completeLeadConnect(token, toolkit, { returnTo, bundle } = {}) {
   const body = { toolkit }
   if (returnTo) body.return_to = returnTo

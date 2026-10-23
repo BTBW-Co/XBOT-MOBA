@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { completeLeadConnect, fetchLeadSetup, startLeadConnect } from '../api/moba'
+import { completeLeadConnect, connectLeadMeea, fetchLeadSetup, startLeadConnect } from '../api/moba'
 import { storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 
 const ICONS = {
@@ -14,6 +14,7 @@ const ICONS = {
   github: '/icons/github.svg',
   googlecalendar: '/icons/google-calendar.svg',
   outlook: '/icons/outlook.svg',
+  meea: '/icons/meea.svg',
 }
 
 const GOOGLE = ['gmail', 'googlecalendar', 'googledrive', 'googledocs', 'googlesheets', 'googleslides', 'googletasks']
@@ -37,6 +38,8 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   const [menu, setMenu] = useState(false)
   const [section, setSection] = useState('workspace')
   const [copied, setCopied] = useState('')
+  const [meeaKey, setMeeaKey] = useState('')
+  const [meeaOpen, setMeeaOpen] = useState(false)
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 820px)')
@@ -83,6 +86,32 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
       cancelled = true
     }
   }, [token, searchParams])
+
+  async function saveMeea(event) {
+    event.preventDefault()
+    const apiKey = meeaKey.trim()
+    if (!apiKey) {
+      setError('Cole a chave do MCP da Meea.')
+      return
+    }
+    setBusy('meea')
+    setError('')
+    try {
+      const result = await connectLeadMeea(token, apiKey)
+      setMeeaKey('')
+      setMeeaOpen(false)
+      if (result?.ok) {
+        setNotice(result.message || 'Meea ligada.')
+        setSection('connected')
+      } else setError(result?.message || 'Não consegui ligar a Meea.')
+      const fresh = await fetchLeadSetup(token).catch(() => view)
+      setView(fresh)
+    } catch (err) {
+      setError(err?.message || 'Não consegui ligar a Meea.')
+    } finally {
+      setBusy('')
+    }
+  }
 
   async function connect(toolkit) {
     setBusy(toolkit)
@@ -218,6 +247,34 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
               </div>
               <button type="button" disabled={busy === 'gmail'} onClick={() => connect('gmail')}>
                 {googleOn ? 'Trocar' : 'Adicionar conta'}
+              </button>
+            </article>
+            <article className="moba-workspace-connector">
+              <div>
+                <strong>Meea</strong>
+                <p>
+                  {bySlug.meea?.status === 'connected'
+                    ? 'MCP ligado neste telefone.'
+                    : 'Reuniões desta conta. A chave fica só neste telefone.'}
+                </p>
+                {meeaOpen ? (
+                  <form className="moba-workspace-key" onSubmit={saveMeea}>
+                    <input
+                      type="password"
+                      name="meea-api-key"
+                      autoComplete="off"
+                      spellCheck="false"
+                      placeholder="mk_live_…"
+                      value={meeaKey}
+                      onChange={(event) => setMeeaKey(event.target.value)}
+                      aria-label="Chave do MCP da Meea"
+                    />
+                    <button type="submit" disabled={busy === 'meea'}>Ligar</button>
+                  </form>
+                ) : null}
+              </div>
+              <button type="button" disabled={busy === 'meea'} onClick={() => setMeeaOpen(true)}>
+                {bySlug.meea?.status === 'connected' ? 'Trocar' : 'Adicionar conta'}
               </button>
             </article>
             {SINGLES.map((item) => {
