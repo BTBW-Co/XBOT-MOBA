@@ -178,8 +178,6 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   const tools = view?.tools || []
   const bySlug = Object.fromEntries(tools.map((tool) => [tool.toolkit, tool]))
   const googleTools = GOOGLE.map((slug) => bySlug[slug]).filter(Boolean)
-  const googleAccount = googleTools.map((tool) => accountLine(tool)).find(Boolean) || ''
-  const googleOn = googleTools.some((tool) => tool.status === 'connected')
   const phone = formatPhone(view?.phone)
   const line = formatPhone(view?.xbot_phone)
   const displayName = view?.full_name || view?.name || ''
@@ -252,22 +250,28 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
           </section>
           <section className="moba-workspace-block">
             <h2>Conectores</h2>
-            <p className="moba-workspace-help">Contas que o assistente deste lead pode usar. Ficam neste telefone.</p>
-            <article className="moba-workspace-connector">
-              <div>
-                <strong>Google</strong>
-                <p>Gmail, agenda, tarefas, Drive, Docs, planilhas e apresentações.</p>
-                {googleAccount ? <p className="moba-workspace-account">{googleAccount}</p> : null}
-                <span className="moba-workspace-marks">
-                  {googleTools.filter((tool) => tool.status === 'connected').map((tool) => (
-                    <img key={tool.toolkit} src={ICONS[tool.toolkit]} alt="" />
-                  ))}
-                </span>
-              </div>
-              <button type="button" disabled={busy === 'gmail'} onClick={() => connect('gmail')}>
-                {googleOn ? 'Trocar' : 'Adicionar conta'}
-              </button>
-            </article>
+            <p className="moba-workspace-help">Conecte cada serviço Google separadamente. Você escolhe quais contas autorizar.</p>
+            {googleTools.map((tool) => {
+              const linked = tool.status === 'connected'
+              const account = accountLine(tool)
+              const description = tool.toolkit === 'gmail'
+                ? 'Consultar remetentes e assuntos dos e-mails.'
+                : tool.toolkit === 'googlecalendar'
+                  ? 'Consultar seus compromissos.'
+                  : 'As ações deste serviço ainda não estão disponíveis no assistente.'
+              return (
+                <article key={tool.toolkit} className="moba-workspace-connector">
+                  <div>
+                    <strong>{tool.label}</strong>
+                    <p>{description}</p>
+                    {account ? <p className="moba-workspace-account">{account}</p> : null}
+                  </div>
+                  <button type="button" disabled={Boolean(busy)} onClick={() => connect(tool.toolkit)}>
+                    {busy === tool.toolkit ? 'Abrindo…' : linked ? 'Trocar conta' : 'Conectar'}
+                  </button>
+                </article>
+              )
+            })}
             <article className="moba-workspace-connector">
               <div>
                 <strong>Meea</strong>
