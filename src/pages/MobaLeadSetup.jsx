@@ -18,10 +18,19 @@ const ICONS = {
 }
 
 const GOOGLE = ['gmail', 'googlecalendar', 'googledrive', 'googledocs', 'googlesheets', 'googleslides', 'googletasks']
+const TOOL_DESCRIPTIONS = {
+  gmail: 'Ler e resumir e-mails, preparar respostas e organizar mensagens.',
+  googlecalendar: 'Consultar horários e criar, alterar ou cancelar compromissos.',
+  googledrive: 'Buscar, ler e organizar arquivos e pastas.',
+  googledocs: 'Ler, criar e editar documentos.',
+  googlesheets: 'Consultar e atualizar planilhas, linhas e células.',
+  googleslides: 'Consultar, criar e editar apresentações.',
+  googletasks: 'Consultar, criar, atualizar e concluir tarefas.',
+}
 const SINGLES = [
-  { toolkit: 'outlook', label: 'Outlook', blurb: 'Ler, buscar e organizar o e-mail do Outlook.' },
-  { toolkit: 'github', label: 'GitHub', blurb: 'PRs, issues e publicações.' },
-  { toolkit: 'exist', label: 'Health', blurb: 'Dados de saúde deste telefone.' },
+  { toolkit: 'outlook', label: 'Outlook', blurb: 'Ler, responder e organizar o e-mail do Outlook.' },
+  { toolkit: 'github', label: 'GitHub', blurb: 'Consultar e gerenciar repositórios, PRs e issues.' },
+  { toolkit: 'exist', label: 'Health', blurb: 'Consultar e registrar os dados disponíveis na sua conta.' },
 ]
 
 export default function MobaLeadSetup({ token: tokenProp, onClose }) {
@@ -250,15 +259,12 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
           </section>
           <section className="moba-workspace-block">
             <h2>Conectores</h2>
-            <p className="moba-workspace-help">Conecte cada serviço Google separadamente. Você escolhe quais contas autorizar.</p>
+            <p className="moba-workspace-help">Conecte cada serviço Google separadamente. As ações disponíveis dependem das permissões que você autorizar e das ferramentas de cada conta.</p>
+            <p className="moba-workspace-help">Peça as ações na conversa pessoal do Moba ou no WhatsApp. Antes de enviar, alterar ou excluir algo, o assistente mostra os detalhes para você confirmar.</p>
             {googleTools.map((tool) => {
               const linked = tool.status === 'connected'
               const account = accountLine(tool)
-              const description = tool.toolkit === 'gmail'
-                ? 'Consultar remetentes e assuntos dos e-mails.'
-                : tool.toolkit === 'googlecalendar'
-                  ? 'Consultar seus compromissos.'
-                  : 'As ações deste serviço ainda não estão disponíveis no assistente.'
+              const description = TOOL_DESCRIPTIONS[tool.toolkit] || tool.description
               return (
                 <article key={tool.toolkit} className="moba-workspace-connector">
                   <div>
@@ -277,8 +283,8 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
                 <strong>Meea</strong>
                 <p>
                   {bySlug.meea?.status === 'connected'
-                    ? 'MCP ligado neste telefone.'
-                    : 'Reuniões desta conta. A chave fica só neste telefone.'}
+                    ? 'Reuniões e ferramentas disponíveis na sua conta conectada.'
+                    : 'Conecte a chave da sua conta para usar as ferramentas de reuniões disponíveis.'}
                 </p>
                 {meeaOpen ? (
                   <form className="moba-workspace-key" onSubmit={saveMeea}>
@@ -307,7 +313,8 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
                 <article key={item.toolkit} className="moba-workspace-connector">
                   <div>
                     <strong>{item.label}</strong>
-                    <p>{linked && accountLine(tool) ? accountLine(tool) : item.blurb}</p>
+                    <p>{item.blurb}</p>
+                    {linked && accountLine(tool) ? <p className="moba-workspace-account">{accountLine(tool)}</p> : null}
                   </div>
                   <button type="button" disabled={busy === item.toolkit} onClick={() => connect(item.toolkit)}>
                     {linked ? 'Trocar' : 'Conectar'}
@@ -315,6 +322,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
                 </article>
               )
             })}
+            <p className="moba-workspace-help">Você também pode pedir lembretes e resumos periódicos. A entrega precisa de uma conversa pessoal do Moba ou de um WhatsApp verificado e conectado. O iMessage ainda não está disponível.</p>
           </section>
         </>
       ) : null}
