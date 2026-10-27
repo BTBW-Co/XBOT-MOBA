@@ -1354,3 +1354,35 @@ body.moba-has-bg .moba-boot {
     transform: none;
   }
 }
+
+.moba-app-icon {
+  display: block;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+.moba-workspace-connector-details { flex: 1; min-width: 0; }
+.moba-google-services { padding: 0 0 12px 44px; }
+.moba-google-service { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }
+.moba-google-service .moba-app-icon { width: 24px; height: 24px; flex-basis: 24px; }
+.moba-google-service strong { font-size: 14px; }
+.moba-google-service p { margin: 3px 0 0; color: #5c5c5c; font-size: 13px; line-height: 1.4; }
+@media (max-width: 420px) {
+  .moba-workspace-connector { flex-wrap: wrap; }
+  .moba-workspace-connector > button { margin-left: 44px; }
+}
+@media (max-width: 420px) {
+  .moba-workspace-connector-details { flex: 1 1 calc(100% - 44px); }
+  .moba-workspace-connector > button { max-width: calc(100% - 44px); }
+}
+.moba-google-service button {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border: 1px solid #dedede;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
