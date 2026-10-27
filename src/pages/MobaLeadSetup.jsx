@@ -4,6 +4,8 @@ import { completeLeadConnect, connectLeadMeea, deleteLeadAccount, fetchLeadSetup
 import { clearVisitorIdentity, storeVisitorIdentity } from '../lib/mobaVisitorIdentity'
 
 const ICONS = {
+  googlesuper: '/icons/google.svg',
+  whatsapp: '/icons/whatsapp.svg',
   gmail: '/icons/gmail.svg',
   googledrive: '/icons/google-drive.svg',
   googledocs: '/icons/google-docs.svg',
@@ -18,6 +20,7 @@ const ICONS = {
 }
 
 const GOOGLE = ['gmail', 'googlecalendar', 'googledrive', 'googledocs', 'googlesheets', 'googleslides', 'googletasks']
+const GOOGLE_LABELS = { gmail: 'Gmail', googlecalendar: 'Agenda', googledrive: 'Drive', googledocs: 'Docs', googlesheets: 'Planilhas', googleslides: 'Apresentações', googletasks: 'Tarefas' }
 const TOOL_DESCRIPTIONS = {
   gmail: 'Ler e resumir e-mails, preparar respostas e organizar mensagens.',
   googlecalendar: 'Consultar horários e criar, alterar ou cancelar compromissos.',
@@ -186,7 +189,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
 
   const tools = view?.tools || []
   const bySlug = Object.fromEntries(tools.map((tool) => [tool.toolkit, tool]))
-  const googleTools = GOOGLE.map((slug) => bySlug[slug]).filter(Boolean)
+  const googleReady = view?.google_unified_ready === true
   const phone = formatPhone(view?.phone)
   const line = formatPhone(view?.xbot_phone)
   const displayName = view?.full_name || view?.name || ''
@@ -251,6 +254,7 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
             <p className="moba-workspace-help">Por onde este telefone fala com o Xbot.</p>
             <Row
               title="WhatsApp"
+              icon="whatsapp"
               detail={line || 'Linha do Xbot'}
               action="Abrir"
               onAction={() => window.location.assign(view?.whatsapp_url || 'whatsapp://')}
@@ -259,27 +263,41 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
           </section>
           <section className="moba-workspace-block">
             <h2>Conectores</h2>
-            <p className="moba-workspace-help">Conecte cada serviço Google separadamente. As ações disponíveis dependem das permissões que você autorizar e das ferramentas de cada conta.</p>
+            <p className="moba-workspace-help">Conecte sua conta Google uma vez. Você escolhe os acessos na autorização do Google; suas conexões anteriores continuam funcionando.</p>
             <p className="moba-workspace-help">Peça as ações na conversa pessoal do Moba ou no WhatsApp. Antes de enviar, alterar ou excluir algo, o assistente mostra os detalhes para você confirmar.</p>
-            {googleTools.map((tool) => {
-              const linked = tool.status === 'connected'
-              const account = accountLine(tool)
-              const description = TOOL_DESCRIPTIONS[tool.toolkit] || tool.description
-              return (
-                <article key={tool.toolkit} className="moba-workspace-connector">
-                  <div>
-                    <strong>{tool.label}</strong>
-                    <p>{description}</p>
-                    {account ? <p className="moba-workspace-account">{account}</p> : null}
-                  </div>
-                  <button type="button" disabled={Boolean(busy)} onClick={() => connect(tool.toolkit)}>
-                    {busy === tool.toolkit ? 'Abrindo…' : linked ? 'Trocar conta' : 'Conectar'}
-                  </button>
-                </article>
-              )
-            })}
             <article className="moba-workspace-connector">
-              <div>
+              <AppIcon toolkit="googlesuper" />
+              <div className="moba-workspace-connector-details">
+                <strong>Google</strong>
+                <p>Uma autorização para os serviços Google que você permitir.</p>
+                {!googleReady ? <p>A conexão unificada aguarda liberação pelo administrador. As conexões anteriores continuam disponíveis abaixo.</p> : null}
+                {accountLine(bySlug.googlesuper) ? <p className="moba-workspace-account">{accountLine(bySlug.googlesuper)}</p> : null}
+                {bySlug.googlesuper?.status === 'connected' ? <p>Conta Google conectada. Cada ação depende das permissões concedidas.</p> : null}
+              </div>
+              <button type="button" disabled={Boolean(busy) || !googleReady} onClick={() => connect('googlesuper')}>
+                {busy === 'googlesuper' ? 'Abrindo…' : bySlug.googlesuper?.status === 'connected' ? 'Trocar conta' : 'Conectar Google'}
+              </button>
+            </article>
+            <div className="moba-google-services" aria-label="Aplicativos Google">
+              {GOOGLE.map((slug) => {
+                const tool = bySlug[slug]
+                const label = tool?.label || GOOGLE_LABELS[slug]
+                return (
+                  <div key={slug} className="moba-google-service">
+                    <AppIcon toolkit={slug} />
+                    <div>
+                      <strong>{label}</strong>
+                      <p>{TOOL_DESCRIPTIONS[slug]}</p>
+                      {tool?.status === 'connected' ? <p className="moba-workspace-account">Conexão anterior preservada{accountLine(tool) ? ` · ${accountLine(tool)}` : ''}</p> : null}
+                      {!googleReady ? <button type="button" disabled={Boolean(busy)} onClick={() => connect(slug)}>{tool?.status === 'connected' ? 'Trocar conexão individual' : 'Conectar individualmente'}</button> : null}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <article className="moba-workspace-connector">
+              <AppIcon toolkit="meea" />
+              <div className="moba-workspace-connector-details">
                 <strong>Meea</strong>
                 <p>
                   {bySlug.meea?.status === 'connected'
@@ -311,7 +329,8 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
               const linked = tool?.status === 'connected'
               return (
                 <article key={item.toolkit} className="moba-workspace-connector">
-                  <div>
+                  <AppIcon toolkit={item.toolkit} />
+                  <div className="moba-workspace-connector-details">
                     <strong>{item.label}</strong>
                     <p>{item.blurb}</p>
                     {linked && accountLine(tool) ? <p className="moba-workspace-account">{accountLine(tool)}</p> : null}
@@ -395,10 +414,11 @@ export default function MobaLeadSetup({ token: tokenProp, onClose }) {
   )
 }
 
-function Row({ title, detail, action, onAction }) {
+function Row({ title, detail, action, onAction, icon }) {
   return (
     <div className="moba-workspace-row">
-      <div>
+      {icon ? <AppIcon toolkit={icon} /> : null}
+      <div className={icon ? "moba-workspace-connector-details" : undefined}>
         <strong>{title}</strong>
         {detail ? <span>{detail}</span> : null}
       </div>
@@ -423,4 +443,9 @@ function formatPhone(raw) {
     if (rest.length === 8) return `+55 ${ddd} ${rest.slice(0, 4)}-${rest.slice(4)}`
   }
   return digits ? `+${digits}` : ''
+}
+
+function AppIcon({ toolkit }) {
+  const src = ICONS[toolkit]
+  return src ? <img className="moba-app-icon" src={src} alt="" aria-hidden="true" width="32" height="32" loading="lazy" /> : null
 }
