@@ -20,7 +20,7 @@ jobs:
       AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
       AMPLIFY_BRANCH: main
       VITE_API_BASE_URL: https://api.xbotone.com
-      VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAAFp2r_hoAITo4s0Q
+      VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAFp2r_hoAITo4sOQ
     steps:
       - uses: actions/checkout@v4
 
